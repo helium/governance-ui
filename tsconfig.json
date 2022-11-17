@@ -26,7 +26,13 @@
     "isolatedModules": true
   },
   "exclude": ["node_modules", ".next", "out", "docs"],
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.js"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "hooks/useVSRts"
+  ],
   "ts-node": {
     "require": ["tsconfig-paths/register"],
     "compilerOptions": {

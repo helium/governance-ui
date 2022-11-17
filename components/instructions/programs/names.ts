@@ -50,6 +50,8 @@ export const PROGRAM_NAMES = {
   vsr2nfGVNHmSY8uxoBGqq8AQbwz3JwaEaHqGbsTPXqQ: 'Voter Stake Registry Program',
   VotEn9AWwTFtJPJSMV5F9jsMY6QwWM5qn3XP9PATGW7:
     'PsyDO Voter Stake Registry Program',
+  vsrZ1Nfkxmt1hVaB7ftvcj7XpRoQ1YtCgPLajeaV6Uj:
+    'Helium Voter Stake Registry Program',
   [foresightConsts.PROGRAM_ID]: 'Foresight Dex',
   [NAME_PROGRAM_ID.toBase58()]: 'Solana Name Service Program',
   AwyKDr1Z5BfdvK3jX1UWopyjsJSV5cq4cuJpoYLofyEn: 'Validator Dao',

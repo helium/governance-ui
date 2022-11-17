@@ -48,7 +48,7 @@ const CreateVsrRegistrar = ({
       form!.governedAccount?.governance?.account &&
       wallet?.publicKey
     ) {
-      const vsrClient = VsrClient.connect(
+      const vsrClient = await VsrClient.connect(
         anchorProvider,
         form?.programId ? new web3.PublicKey(form.programId) : undefined
       )

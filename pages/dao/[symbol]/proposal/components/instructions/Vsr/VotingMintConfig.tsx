@@ -4,7 +4,6 @@ import {
   Governance,
   ProgramAccount,
   serializeInstructionToBase64,
-  //serializeInstructionToBase64,
 } from '@solana/spl-governance'
 import { validateInstruction } from '@utils/instructionTools'
 import { UiInstruction } from '@utils/uiTypes/proposalCreationTypes'
@@ -40,6 +39,8 @@ interface ConfigureCollectionForm {
   mintUnlockedFactor: number
   mintLockupFactor: number
   mintLockupSaturation: number
+  mintMinRequiredlockedFactor?: number
+  mintMinRequiredLockupSaturation?: number
 }
 
 const VotingMintConfig = ({
@@ -49,6 +50,7 @@ const VotingMintConfig = ({
   index: number
   governance: ProgramAccount<Governance> | null
 }) => {
+  const [vsrClient, setVSRClient] = useState<VsrClient | null>(null)
   const { realm } = useRealm()
   const { assetAccounts } = useGovernanceAssets()
   const shouldBeGoverned = index !== 0 && governance
@@ -56,6 +58,23 @@ const VotingMintConfig = ({
   const [formErrors, setFormErrors] = useState({})
   const { handleSetInstructions } = useContext(NewProposalContext)
   const { anchorProvider, wallet } = useWallet()
+
+  useEffect(() => {
+    ;(async () => {
+      if (anchorProvider && form?.programId) {
+        setVSRClient(
+          await VsrClient.connect(
+            anchorProvider,
+            new web3.PublicKey(form.programId)
+          )
+        )
+      }
+    })()
+
+    return () => {
+      // this now gets called when the component unmounts
+    }
+  }, [anchorProvider, form?.programId, setVSRClient])
 
   async function getInstruction(): Promise<UiInstruction> {
     const isValid = await validateInstruction({ schema, form, setFormErrors })
@@ -66,16 +85,13 @@ const VotingMintConfig = ({
       form!.governedAccount?.governance.pubkey &&
       wallet?.publicKey
     ) {
-      const vsrClient = VsrClient.connect(
-        anchorProvider,
-        form?.programId ? new web3.PublicKey(form.programId) : undefined
-      )
       const digitShift = form.mintDigitShift
       const unlockedScaledFactor = getScaledFactor(form.mintUnlockedFactor)
       const lockupScaledFactor = getScaledFactor(form.mintLockupFactor)
       const lockupSaturationSecs = new BN(
         yearsToSecs(form.mintLockupSaturation).toString()
       )
+
       const mint = new PublicKey(form.mint)
       const mintIndex = form.mintIndex
       const grantAuthority = form.grantAuthority!.governance.pubkey
@@ -114,22 +130,48 @@ const VotingMintConfig = ({
       } catch (ex) {
         console.info("Can't fetch registrar", ex)
       }
-      const configureCollectionIx = await vsrClient!.program.methods
-        .configureVotingMint(
-          mintIndex, // mint index
-          digitShift, // digit_shift
-          unlockedScaledFactor, // unlocked_scaled_factor
-          lockupScaledFactor, // lockup_scaled_factor
-          lockupSaturationSecs, // lockup_saturation_secs
-          grantAuthority! // grant_authority)
-        )
-        .accounts({
-          registrar,
-          realmAuthority: realm!.account.authority,
-          mint,
-        })
-        .remainingAccounts(remainingAccounts)
-        .instruction()
+
+      let configureCollectionIx
+      if (vsrClient?.hasMinRequired) {
+        configureCollectionIx = await vsrClient!.program.methods
+          .configureVotingMint(
+            mintIndex, // mint index
+            digitShift, // digit_shift
+            unlockedScaledFactor, // unlocked_scaled_factor
+            lockupScaledFactor, // lockup_scaled_factor
+            lockupSaturationSecs, // lockup_saturation_secs
+            grantAuthority!, // grant_authority
+            getScaledFactor(form.mintMinRequiredlockedFactor!),
+            new BN(
+              yearsToSecs(form.mintMinRequiredLockupSaturation!).toString()
+            )
+          )
+          .accounts({
+            registrar,
+            realmAuthority: realm!.account.authority,
+            mint,
+          })
+          .remainingAccounts(remainingAccounts)
+          .instruction()
+      } else {
+        configureCollectionIx = await vsrClient!.program.methods
+          .configureVotingMint(
+            mintIndex, // mint index
+            digitShift, // digit_shift
+            unlockedScaledFactor, // unlocked_scaled_factor
+            lockupScaledFactor, // lockup_scaled_factor
+            lockupSaturationSecs, // lockup_saturation_secs
+            grantAuthority! // grant_authority
+          )
+          .accounts({
+            registrar,
+            realmAuthority: realm!.account.authority,
+            mint,
+          })
+          .remainingAccounts(remainingAccounts)
+          .instruction()
+      }
+
       serializedInstruction = serializeInstructionToBase64(
         configureCollectionIx
       )
@@ -193,10 +235,12 @@ const VotingMintConfig = ({
         }
       ),
   })
+
   const inputs: InstructionInput[] = [
     {
       label: 'Voter Stake Registry Program ID',
-      initialValue: DEFAULT_VSR_ID.toString(),
+      initialValue:
+        vsrClient?.program.programId.toString() || DEFAULT_VSR_ID.toString(),
       name: 'programId',
       type: InstructionInputType.INPUT,
     },
@@ -259,6 +303,26 @@ const VotingMintConfig = ({
       name: 'mintLockupFactor',
       type: InstructionInputType.INPUT,
     },
+    ...(vsrClient?.hasMinRequired
+      ? [
+          {
+            label: 'mint min required lockup factor',
+            initialValue: 0,
+            min: 0,
+            inputType: 'number',
+            name: 'mintMinRequiredlockedFactor',
+            type: InstructionInputType.INPUT,
+          },
+          {
+            label: 'mint min required lockup saturation (years)',
+            initialValue: 0,
+            min: 0,
+            inputType: 'number',
+            name: 'mintMinRequiredLockupSaturation',
+            type: InstructionInputType.INPUT,
+          },
+        ]
+      : []),
     {
       label: 'mint lockup saturation (years)',
       initialValue: 0,
@@ -268,6 +332,7 @@ const VotingMintConfig = ({
       type: InstructionInputType.INPUT,
     },
   ]
+
   return (
     <>
       <InstructionForm
