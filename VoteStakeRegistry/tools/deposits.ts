@@ -1,7 +1,7 @@
 import { BN, EventParser } from '@project-serum/anchor'
 import { ProgramAccount, Realm } from '@solana/spl-governance'
 import { PublicKey, Transaction, Connection } from '@solana/web3.js'
-import { tryGetMint } from '@utils/tokens'
+import { tryGetMint, getUnscaledFactor } from '@utils/tokens'
 import {
   getRegistrarPDA,
   getVoterPDA,
@@ -138,13 +138,12 @@ export const calcMultiplier = ({
   //       depositScaledFactor
   //     return depositScaledFactor !== 0 ? calc : 0
   //   }
-  const calc =
-    (depositScaledFactor +
-      (maxExtraLockupVoteWeightScaledFactor *
-        Math.min(lockupSecs, lockupSaturationSecs)) /
-        lockupSaturationSecs) /
-    depositScaledFactor
-  return depositScaledFactor !== 0 ? calc : 0
+
+  return (
+    getUnscaledFactor(depositScaledFactor) +
+    Math.min(lockupSecs / lockupSaturationSecs, 1) *
+      getUnscaledFactor(maxExtraLockupVoteWeightScaledFactor)
+  )
 }
 
 export const getPeriod = (

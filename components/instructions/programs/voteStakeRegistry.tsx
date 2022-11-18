@@ -22,6 +22,7 @@ import { calcMultiplier } from 'VoteStakeRegistry/tools/deposits'
 interface ClawbackInstruction {
   depositEntryIndex: number
 }
+
 interface VotingMintCfgInstruction {
   idx: number
   digitShift: number
@@ -29,7 +30,10 @@ interface VotingMintCfgInstruction {
   maxExtraLockupVoteWeightScaledFactor: BN
   lockupSaturationSecs: BN
   grantAuthority: PublicKey
+  minRequiredLockupVoteWeightScaledFactor?: BN
+  minRequiredLockupSaturationSecs?: BN
 }
+
 export interface GrantInstruction {
   periods: number
   kind: object
@@ -121,16 +125,21 @@ const common_instructions = (programId: PublicKey) => ({
           new Wallet(Keypair.generate()),
           options
         )
+
         const vsrClient = await VsrClient.connect(provider, programId)
 
         const decodedInstructionData = new BorshInstructionCoder(
           vsrClient.program.idl
         ).decode(Buffer.from(data))?.data as VotingMintCfgInstruction
+
         const {
           maxExtraLockupVoteWeightScaledFactor,
           lockupSaturationSecs,
           baselineVoteWeightScaledFactor,
+          minRequiredLockupVoteWeightScaledFactor,
+          minRequiredLockupSaturationSecs,
         } = decodedInstructionData
+
         return (
           <div className="space-y-3">
             <div>Index: {decodedInstructionData?.idx}</div>
@@ -139,11 +148,28 @@ const common_instructions = (programId: PublicKey) => ({
               Unlocked factor: {baselineVoteWeightScaledFactor.toNumber() / 1e9}{' '}
               ({baselineVoteWeightScaledFactor.toNumber()})
             </div>
+            {minRequiredLockupVoteWeightScaledFactor && (
+              <div>
+                Min lockup factor:{' '}
+                {minRequiredLockupVoteWeightScaledFactor.toNumber() / 1e9} (
+                {minRequiredLockupVoteWeightScaledFactor.toNumber()})
+              </div>
+            )}
             <div>
-              Lockup factor:{' '}
+              Max Lockup factor:{' '}
               {maxExtraLockupVoteWeightScaledFactor.toNumber() / 1e9} (
               {maxExtraLockupVoteWeightScaledFactor.toNumber()})
             </div>
+            {minRequiredLockupSaturationSecs && (
+              <div>
+                Min required lockup time:{' '}
+                {decodedInstructionData &&
+                  getFormattedStringFromDays(
+                    secsToDays(minRequiredLockupSaturationSecs.toNumber())
+                  )}{' '}
+                (secs: {minRequiredLockupSaturationSecs.toNumber()})
+              </div>
+            )}
             <div>
               Max lockup time:{' '}
               {decodedInstructionData &&
