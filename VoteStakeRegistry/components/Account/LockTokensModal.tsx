@@ -143,6 +143,7 @@ const LockTokensModal = ({
       x.mint.publicKey.toBase58() === realm!.account.communityMint.toBase58() &&
       x.lockup.kind.none
   )
+  const [showCustomDuration, setShowCustomDuration] = useState(false)
   const [lockupPeriodDays, setLockupPeriodDays] = useState<number>(0)
   const allowClawback = false
   const [lockupPeriod, setLockupPeriod] = useState<Period>(lockupPeriods[0])
@@ -258,6 +259,7 @@ const LockTokensModal = ({
       })
       throw 'To lock tokens with clawback option you must first withdraw them to wallet'
     }
+
     await voteRegistryLockDeposit({
       rpcContext,
       mintPk: realm!.account.communityMint!,
@@ -434,10 +436,7 @@ const LockTokensModal = ({
                   <LinkButton
                     className="mb-2"
                     onClick={() =>
-                      setLockupPeriod({
-                        defaultValue: 1,
-                        display: 'Custom',
-                      })
+                      setShowCustomDuration((oldValue) => !oldValue)
                     }
                   >
                     Custom Duration
@@ -446,16 +445,17 @@ const LockTokensModal = ({
                 <ButtonGroup
                   activeValue={lockupPeriod.display}
                   className="h-10"
-                  onChange={(period) =>
+                  onChange={(period) => {
                     setLockupPeriod(
                       //@ts-ignore
                       lockupPeriods.find((p) => p.display === period)
                     )
-                  }
+                    setShowCustomDuration(false)
+                  }}
                   values={lockupPeriods.map((p) => p.display)}
                 />
               </div>
-              {lockupPeriod.defaultValue === 1 && (
+              {showCustomDuration && (
                 <>
                   <div className={`${labelClasses} flex justify-between`}>
                     Number of days
@@ -475,7 +475,7 @@ const LockTokensModal = ({
                     onChange={({ target: { value } }) => {
                       setLockupPeriodDays(Number(value))
                     }}
-                    step={minReqLockupDays ? 0.1 : 1}
+                    step={1}
                   />
                 </>
               )}
@@ -604,8 +604,8 @@ const LockTokensModal = ({
     }
   }, [depositToUnlock])
   useEffect(() => {
-    setLockupPeriodDays(minReqLockupDays || lockupPeriod.defaultValue)
-  }, [lockupPeriod.defaultValue, minReqLockupDays])
+    setLockupPeriodDays(lockupPeriod.defaultValue)
+  }, [lockupPeriod.defaultValue])
   // const isMainBtnVisible = !hasMoreTokensInWallet || currentStep !== 0
   const isTitleVisible = currentStep !== 3
   const getCurrentBtnForStep = () => {

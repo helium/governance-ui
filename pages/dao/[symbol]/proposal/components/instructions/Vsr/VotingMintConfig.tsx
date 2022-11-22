@@ -18,7 +18,11 @@ import { getValidatedPublickKey } from '@utils/validations'
 import { AssetAccount } from '@utils/uiTypes/assets'
 import useGovernanceAssets from '@hooks/useGovernanceAssets'
 import { getScaledFactor } from '@utils/tokens'
-import { yearsToSecs } from 'VoteStakeRegistry/tools/dateTools'
+import {
+  yearsToDays,
+  yearsToSecs,
+  daysToSecs,
+} from 'VoteStakeRegistry/tools/dateTools'
 import { BN, web3 } from '@project-serum/anchor'
 import { PublicKey } from '@solana/web3.js'
 import {
@@ -143,7 +147,9 @@ const VotingMintConfig = ({
             grantAuthority!, // grant_authority
             getScaledFactor(form.mintMinRequiredlockedFactor!),
             new BN(
-              yearsToSecs(form.mintMinRequiredLockupSaturation!).toString()
+              daysToSecs(
+                Math.ceil(yearsToDays(form.mintMinRequiredLockupSaturation!))
+              ).toString()
             )
           )
           .accounts({

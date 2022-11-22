@@ -173,6 +173,7 @@ export const calcMintMultiplier = (
   registrar: Registrar | null,
   realm: ProgramAccount<Realm> | undefined
 ) => {
+  let calced = 0
   const mintCfgs = registrar?.votingMints
   const mintCfg = mintCfgs?.find(
     (x) => x.mint.toBase58() === realm?.account.communityMint.toBase58()
@@ -183,28 +184,38 @@ export const calcMintMultiplier = (
       lockupSaturationSecs,
       baselineVoteWeightScaledFactor,
       maxExtraLockupVoteWeightScaledFactor,
-      // minRequiredLockupSaturationSecs,
-      // minRequiredLockupVoteWeightScaledFactor,
+      minRequiredLockupSaturationSecs,
+      minRequiredLockupVoteWeightScaledFactor,
     } = mintCfg
-    // const hasMinFields = [
-    //   minRequiredLockupSaturationSecs,
-    //   minRequiredLockupVoteWeightScaledFactor,
-    // ].every((minField) => typeof minField !== 'undefined')
-    const depositScaledFactorNum = baselineVoteWeightScaledFactor.toNumber()
     const maxExtraLockupVoteWeightScaledFactorNum = maxExtraLockupVoteWeightScaledFactor.toNumber()
     const lockupSaturationSecsNum = lockupSaturationSecs.toNumber()
+    const hasMinFields = [
+      minRequiredLockupSaturationSecs,
+      minRequiredLockupVoteWeightScaledFactor,
+    ].every((minField) => typeof minField !== 'undefined')
 
-    //(deposit_scaled_factor + max_extra_lockup_vote_weight_scaled_factor * min(lockup_secs, lockup_saturation_secs) / lockup_saturation_secs) / deposit_scaled_factor
-    const calced = calcMultiplier({
-      depositScaledFactor: depositScaledFactorNum,
-      maxExtraLockupVoteWeightScaledFactor: maxExtraLockupVoteWeightScaledFactorNum,
-      lockupSaturationSecs: lockupSaturationSecsNum,
-      lockupSecs,
-    })
-
-    return parseFloat(calced.toFixed(2))
+    if (
+      hasMinFields &&
+      lockupSecs <= minRequiredLockupSaturationSecs!.toNumber()
+    ) {
+      calced = calcMultiplier({
+        depositScaledFactor: baselineVoteWeightScaledFactor.toNumber(),
+        maxExtraLockupVoteWeightScaledFactor: minRequiredLockupVoteWeightScaledFactor!.toNumber(),
+        lockupSaturationSecs: minRequiredLockupSaturationSecs!.toNumber(),
+        lockupSecs,
+      })
+    } else {
+      //(deposit_scaled_factor + max_extra_lockup_vote_weight_scaled_factor * min(lockup_secs, lockup_saturation_secs) / lockup_saturation_secs) / deposit_scaled_factor
+      calced = calcMultiplier({
+        depositScaledFactor: baselineVoteWeightScaledFactor.toNumber(),
+        maxExtraLockupVoteWeightScaledFactor: maxExtraLockupVoteWeightScaledFactorNum,
+        lockupSaturationSecs: lockupSaturationSecsNum,
+        lockupSecs,
+      })
+    }
   }
-  return 0
+
+  return calced === 0 ? calced : parseFloat(calced.toFixed(2))
 }
 
 const getDepositsAdditionalInfoEvents = async (

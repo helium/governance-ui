@@ -42,6 +42,7 @@ export const yearsToDays = (years: number) => {
 export const daysToYear = (days: number) => {
   return days / DAYS_PER_YEAR
 }
+
 export const yearsToSecs = (years: number) => {
   return DAYS_PER_YEAR * years * SECS_PER_DAY
 }
@@ -52,6 +53,10 @@ export const secsToDays = (secs: number) => {
 
 export const daysToMonths = (days: number) => {
   return days / DAYS_PER_MONTH
+}
+
+export const daysToSecs = (days: number) => {
+  return SECS_PER_DAY * days
 }
 
 export const getMinDurationFmt = (deposit: DepositWithMintAccount) => {
