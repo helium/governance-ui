@@ -177,15 +177,23 @@ export const calcMintMultiplier = (
   const mintCfg = mintCfgs?.find(
     (x) => x.mint.toBase58() === realm?.account.communityMint.toBase58()
   )
+
   if (mintCfg) {
     const {
       lockupSaturationSecs,
       baselineVoteWeightScaledFactor,
       maxExtraLockupVoteWeightScaledFactor,
+      // minRequiredLockupSaturationSecs,
+      // minRequiredLockupVoteWeightScaledFactor,
     } = mintCfg
+    // const hasMinFields = [
+    //   minRequiredLockupSaturationSecs,
+    //   minRequiredLockupVoteWeightScaledFactor,
+    // ].every((minField) => typeof minField !== 'undefined')
     const depositScaledFactorNum = baselineVoteWeightScaledFactor.toNumber()
     const maxExtraLockupVoteWeightScaledFactorNum = maxExtraLockupVoteWeightScaledFactor.toNumber()
     const lockupSaturationSecsNum = lockupSaturationSecs.toNumber()
+
     //(deposit_scaled_factor + max_extra_lockup_vote_weight_scaled_factor * min(lockup_secs, lockup_saturation_secs) / lockup_saturation_secs) / deposit_scaled_factor
     const calced = calcMultiplier({
       depositScaledFactor: depositScaledFactorNum,

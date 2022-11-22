@@ -296,6 +296,7 @@ export function useVotingPlugins() {
       setMaxVoterWeight(null)
     }
   }
+
   const getIsFromCollection = (nft: NFTWithMeta) => {
     return (
       nft.collection &&
@@ -335,6 +336,7 @@ export function useVotingPlugins() {
         }
       }
     }
+
     const handleNftplugin = () => {
       if (
         nftClient &&
@@ -392,6 +394,7 @@ export function useVotingPlugins() {
         }
       }
     }
+
     const handleSwitchboardPlugin = () => {
       if (
         switchboardClient &&
@@ -410,6 +413,7 @@ export function useVotingPlugins() {
         }
       }
     }
+
     if (
       !currentClient ||
       currentClient.realm?.pubkey.toBase58() !== realm?.pubkey.toBase58() ||

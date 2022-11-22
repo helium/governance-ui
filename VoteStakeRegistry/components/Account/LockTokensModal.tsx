@@ -22,6 +22,7 @@ import { DepositWithMintAccount } from 'VoteStakeRegistry/sdk/accounts'
 import {
   yearsToDays,
   daysToMonths,
+  secsToDays,
   getMinDurationInDays,
   SECS_PER_DAY,
   getFormattedStringFromDays,
@@ -72,7 +73,18 @@ const LockTokensModal = ({
     (s) => s.actions
   )
 
-  const lockupPeriods: Period[] = [
+  const mintCfgs = voteStakeRegistryRegistrar?.votingMints
+  const mintCfg = mintCfgs?.find(
+    (x) => x.mint.toBase58() === realm?.account.communityMint.toBase58()
+  )
+
+  const minReqLockupDays: number | null =
+    client?.hasMinRequired &&
+    typeof mintCfg?.minRequiredLockupSaturationSecs !== 'undefined'
+      ? secsToDays(mintCfg?.minRequiredLockupSaturationSecs.toNumber())
+      : null
+
+  const defaultLockupPeriods: Period[] = [
     {
       defaultValue: yearsToDays(1),
       display: '1y',
@@ -93,11 +105,21 @@ const LockTokensModal = ({
       defaultValue: yearsToDays(5),
       display: '5y',
     },
-    {
-      defaultValue: 1,
-      display: 'Custom',
-    },
-  ].filter((x) =>
+  ]
+
+  const lockupPeriods: Period[] = (minReqLockupDays && minReqLockupDays > 0
+    ? [
+        {
+          defaultValue: minReqLockupDays,
+          display: 'min',
+        },
+        ...defaultLockupPeriods.filter(
+          (period) =>
+            period.defaultValue == 1 || period.defaultValue > minReqLockupDays
+        ),
+      ]
+    : defaultLockupPeriods
+  ).filter((x) =>
     depositToUnlock
       ? getMinDurationInDays(depositToUnlock) <= x.defaultValue ||
         x.display === 'Custom'
@@ -109,6 +131,7 @@ const LockTokensModal = ({
     .reduce((prev, current) => {
       return prev > current ? prev : current
     })
+
   const maxMultiplier = calcMintMultiplier(
     maxNonCustomDaysLockup * SECS_PER_DAY,
     voteStakeRegistryRegistrar,
@@ -335,6 +358,16 @@ const LockTokensModal = ({
           <>
             {!depositToUnlock ? (
               <>
+                {minReqLockupDays && (
+                  <div className="bg-bkg-3 rounded-md w-full p-4 mb-4 font-normal text-xs">
+                    <div>
+                      There is a minimum required lockup time of{' '}
+                      <span className="bont-bold text-sm text-primary-light">
+                        {getFormattedStringFromDays(minReqLockupDays)}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <div className={labelClasses}>Lockup Type</div>
                   <LinkButton
@@ -396,7 +429,20 @@ const LockTokensModal = ({
                 />
               </div>
               <div className="mb-4">
-                <div className={labelClasses}>Duration</div>
+                <div className="flex items-center justify-between">
+                  <div className={labelClasses}>Duration</div>
+                  <LinkButton
+                    className="mb-2"
+                    onClick={() =>
+                      setLockupPeriod({
+                        defaultValue: 1,
+                        display: 'Custom',
+                      })
+                    }
+                  >
+                    Custom Duration
+                  </LinkButton>
+                </div>
                 <ButtonGroup
                   activeValue={lockupPeriod.display}
                   className="h-10"
@@ -416,13 +462,20 @@ const LockTokensModal = ({
                   </div>
                   <Input
                     className="mb-4"
-                    min={1}
+                    min={minReqLockupDays ? minReqLockupDays : 1}
                     value={lockupPeriodDays}
                     type="number"
-                    onChange={(e) =>
-                      setLockupPeriodDays(Number(e.target.value))
-                    }
-                    step={1}
+                    onBlur={({ target: { value } }) => {
+                      if (minReqLockupDays) {
+                        setLockupPeriodDays(
+                          value > minReqLockupDays ? value : minReqLockupDays
+                        )
+                      }
+                    }}
+                    onChange={({ target: { value } }) => {
+                      setLockupPeriodDays(Number(value))
+                    }}
+                    step={minReqLockupDays ? 0.1 : 1}
                   />
                 </>
               )}
@@ -551,8 +604,8 @@ const LockTokensModal = ({
     }
   }, [depositToUnlock])
   useEffect(() => {
-    setLockupPeriodDays(lockupPeriod.defaultValue)
-  }, [lockupPeriod.defaultValue])
+    setLockupPeriodDays(minReqLockupDays || lockupPeriod.defaultValue)
+  }, [lockupPeriod.defaultValue, minReqLockupDays])
   // const isMainBtnVisible = !hasMoreTokensInWallet || currentStep !== 0
   const isTitleVisible = currentStep !== 3
   const getCurrentBtnForStep = () => {

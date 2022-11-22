@@ -17,6 +17,8 @@ export interface votingMint {
   lockupSaturationSecs: BN
   maxExtraLockupVoteWeightScaledFactor: BN
   mint: PublicKey
+  minRequiredLockupVoteWeightScaledFactor?: BN
+  minRequiredLockupSaturationSecs?: BN
 }
 
 export type LockupType = 'none' | 'monthly' | 'cliff' | 'constant' | 'daily' //there is also daily type but not used on ui yet
