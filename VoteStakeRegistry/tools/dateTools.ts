@@ -13,9 +13,7 @@ export function getFormattedStringFromDays(
   fullFormat = false
 ) {
   const years = Math.floor(numberOfDays / DAYS_PER_YEAR)
-  const months = Math.floor(
-    Math.floor(numberOfDays % DAYS_PER_YEAR) / DAYS_PER_MONTH
-  )
+  const months = Math.floor((numberOfDays % DAYS_PER_YEAR) / DAYS_PER_MONTH)
   const days = Math.floor((numberOfDays % DAYS_PER_YEAR) % DAYS_PER_MONTH)
   const hours = (numberOfDays - Math.floor(numberOfDays)) * HOURS_PER_DAY
   const hoursInt = Math.floor(hours)
@@ -65,6 +63,7 @@ export const getMinDurationFmt = (deposit: DepositWithMintAccount) => {
 
 export const getTimeLeftFromNowFmt = (deposit: DepositWithMintAccount) => {
   const dateNowSecTimeStampBN = new BN(new Date().getTime() / 1000)
+
   return getFormattedStringFromDays(
     deposit.lockup.endTs.sub(dateNowSecTimeStampBN).toNumber() / SECS_PER_DAY
   )
