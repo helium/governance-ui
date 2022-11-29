@@ -132,7 +132,18 @@ const DepositCard = ({ deposit }: { deposit: DepositWithMintAccount }) => {
       </div>
     )
   }
+
   const tokenInfo = tokenService.getTokenInfo(deposit.mint.publicKey.toBase58())
+  const votingMultiplier = (client?.hasMinRequired
+    ? deposit.votingPower.isZero()
+      ? 0
+      : deposit.votingPower.toNumber() /
+        deposit.amountInitiallyLockedNative.toNumber()
+    : deposit.votingPower.isZero() || deposit.votingPowerBaseline.isZero()
+    ? 0
+    : deposit.votingPower.toNumber() / deposit.votingPowerBaseline.toNumber()
+  ).toFixed(2)
+
   return (
     <div className="border border-fgd-4 rounded-lg flex flex-col">
       <div className="bg-bkg-3 px-4 py-4 pr-16 rounded-md rounded-b-none flex items-center">
@@ -192,15 +203,7 @@ const DepositCard = ({ deposit }: { deposit: DepositWithMintAccount }) => {
             />
           )}
           {isRealmCommunityMint && (
-            <CardLabel
-              label="Vote Multiplier"
-              value={(deposit.votingPower.isZero() ||
-              deposit.votingPowerBaseline.isZero()
-                ? 0
-                : deposit.votingPower.toNumber() /
-                  deposit.votingPowerBaseline.toNumber()
-              ).toFixed(2)}
-            />
+            <CardLabel label="Vote Multiplier" value={votingMultiplier} />
           )}
           <CardLabel
             label={isConstant ? 'Min. Duration' : 'Time left'}

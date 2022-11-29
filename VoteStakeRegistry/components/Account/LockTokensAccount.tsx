@@ -81,6 +81,7 @@ const LockTokensAccount = ({ tokenOwnerRecordPk }) => {
           unlockedTypes.includes(nextType)))
     )
   }
+
   const handleGetDeposits = async () => {
     setIsLoading(true)
     try {
@@ -151,6 +152,7 @@ const LockTokensAccount = ({ tokenOwnerRecordPk }) => {
     }
     setIsLoading(false)
   }
+
   useEffect(() => {
     if (
       JSON.stringify(ownDeposits) !== JSON.stringify(deposits) &&
@@ -160,10 +162,12 @@ const LockTokensAccount = ({ tokenOwnerRecordPk }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO please fix, it can cause difficult bugs. You might wanna check out https://bobbyhadz.com/blog/react-hooks-exhaustive-deps for info. -@asktree
   }, [JSON.stringify(ownDeposits), ownDeposits.length])
+
   useEffect(() => {
     handleGetDeposits()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO please fix, it can cause difficult bugs. You might wanna check out https://bobbyhadz.com/blog/react-hooks-exhaustive-deps for info. -@asktree
   }, [isOwnerOfDeposits, client])
+
   useEffect(() => {
     const getTokenOwnerRecord = async () => {
       const defaultMint =

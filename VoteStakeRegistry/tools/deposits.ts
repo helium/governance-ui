@@ -41,15 +41,20 @@ export const getDeposits = async ({
   const existingRegistrar = await tryGetRegistrar(registrar, client)
   const mintCfgs = existingRegistrar?.votingMints || []
   const mints = {}
+
   let votingPower = new BN(0)
   let votingPowerFromDeposits = new BN(0)
   let deposits: DepositWithMintAccount[] = []
+  let depositsWithPower: DepositWithMintAccount[] = []
+  let zeroBaselineDepositsWithPower: DepositWithMintAccount[] = []
+
   for (const i of mintCfgs) {
     if (i.mint.toBase58() !== emptyPk) {
       const mint = await tryGetMint(connection, i.mint)
       mints[i.mint.toBase58()] = mint
     }
   }
+
   if (existingVoter) {
     deposits = existingVoter.deposits
       .map(
@@ -61,6 +66,7 @@ export const getDeposits = async ({
           } as DepositWithMintAccount)
       )
       .filter((x) => typeof isUsed === 'undefined' || x.isUsed === isUsed)
+
     const usedDeposits = deposits.filter((x) => x.isUsed)
     const areThereAnyUsedDeposits = usedDeposits.length
     if (areThereAnyUsedDeposits) {
@@ -72,12 +78,14 @@ export const getDeposits = async ({
         registrar,
         voter
       )
+
       const DEPOSIT_EVENT_NAME = 'DepositEntryInfo'
       const VOTER_INFO_EVENT_NAME = 'VoterInfo'
       const depositsInfo = events.filter((x) => x.name === DEPOSIT_EVENT_NAME)
       const votingPowerEntry = events.find(
         (x) => x.name === VOTER_INFO_EVENT_NAME
       )
+
       deposits = deposits.map((x) => {
         const additionalInfoData = depositsInfo.find(
           (info) => info.data.depositEntryIndex === x.index
@@ -91,17 +99,36 @@ export const getDeposits = async ({
         x.votingPower = additionalInfoData.votingPower || new BN(0)
         x.votingPowerBaseline =
           additionalInfoData.votingPowerBaseline || new BN(0)
+
         return x
       })
-      if (
-        votingPowerEntry &&
-        !votingPowerEntry.data.votingPowerBaseline.isZero()
-      ) {
-        votingPowerFromDeposits = votingPowerEntry.data.votingPowerBaseline
+
+      depositsWithPower = deposits.filter((d) => !d.votingPower.isZero())
+      zeroBaselineDepositsWithPower = depositsWithPower.filter((d) =>
+        d.votingPowerBaseline.isZero()
+      )
+
+      if (votingPowerEntry) {
+        if (!votingPowerEntry.data.votingPowerBaseline.isZero()) {
+          votingPowerFromDeposits = votingPowerEntry.data.votingPowerBaseline
+        }
+
+        // If we have zero baseline deposits with power
+        // add the initially locked to the power
+        // as they wont be included in votingPowerEntry.data.votingPowerBaseline
+        if (zeroBaselineDepositsWithPower.length > 0) {
+          votingPowerFromDeposits = votingPowerFromDeposits.add(
+            zeroBaselineDepositsWithPower
+              .map((d) => d.votingPower)
+              .reduce((a, b) => a.add(b), new BN(0))
+          )
+        }
+
+        if (!votingPowerEntry.data.votingPower.isZero()) {
+          votingPower = votingPowerEntry.data.votingPower
+        }
       }
-      if (votingPowerEntry && !votingPowerEntry.data.votingPower.isZero()) {
-        votingPower = votingPowerEntry.data.votingPower
-      }
+
       return { votingPower, deposits, votingPowerFromDeposits }
     }
   }
