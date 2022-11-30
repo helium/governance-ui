@@ -17,7 +17,10 @@ import { BN } from '@project-serum/anchor'
 import tokenService from '@utils/services/token'
 import useWalletStore from 'stores/useWalletStore'
 import { getDeposits } from 'VoteStakeRegistry/tools/deposits'
-import { DepositWithMintAccount } from 'VoteStakeRegistry/sdk/accounts'
+import {
+  DepositWithMintAccount,
+  VotingMint,
+} from 'VoteStakeRegistry/sdk/accounts'
 import useDepositStore from 'VoteStakeRegistry/stores/useDepositStore'
 import { notify } from '@utils/notifications'
 import useVotePluginsClientStore from 'stores/useVotePluginsClientStore'
@@ -29,16 +32,23 @@ import InlineNotification from '@components/InlineNotification'
 import {
   LightningBoltIcon,
   LinkIcon,
-  LockClosedIcon,
+  LockClosedIcon as LockClosedIconOutline,
 } from '@heroicons/react/outline'
+import { LockClosedIcon as LockClosedIconSolid } from '@heroicons/react/solid'
 import { getMintMetadata } from '@components/instructions/programs/splToken'
 import Account from './Account'
 import { abbreviateAddress } from '@utils/formatting'
 import { TokenDeposit } from '@components/TokenBalance/TokenBalanceCard'
+import Tooltip from '@components/Tooltip'
+import {
+  getFormattedStringFromDays,
+  secsToDays,
+} from 'VoteStakeRegistry/tools/dateTools'
 
 interface DepositBox {
   mintPk: PublicKey
   mint: MintInfo
+  mintCfg: VotingMint
   currentAmount: BN
   lockUpKind: string
 }
@@ -55,6 +65,10 @@ const LockTokensAccount = ({ tokenOwnerRecordPk }) => {
   } = useRealm()
   const [isLockModalOpen, setIsLockModalOpen] = useState(false)
   const client = useVotePluginsClientStore((s) => s.state.vsrClient)
+  const voteStakeRegistryRegistrar = useVotePluginsClientStore(
+    (s) => s.state.voteStakeRegistryRegistrar
+  )
+  const mintCfgs = voteStakeRegistryRegistrar?.votingMints
   const [reducedDeposits, setReducedDeposits] = useState<DepositBox[]>([])
   const ownDeposits = useDepositStore((s) => s.state.deposits)
   const [deposits, setDeposits] = useState<DepositWithMintAccount[]>([])
@@ -70,7 +84,8 @@ const LockTokensAccount = ({ tokenOwnerRecordPk }) => {
   const connection = useWalletStore((s) => s.connection.current)
   const wallet = useWalletStore((s) => s.current)
   const connected = useWalletStore((s) => s.connected)
-  const mainBoxesClasses = 'bg-bkg-1 col-span-1 p-4 rounded-md'
+  const mainBoxesClasses =
+    'bg-bkg-1 flex flex-wrap justify-between items-center rounded-md p-4'
   const isNextSameRecord = (x, next) => {
     const nextType = Object.keys(next.lockup.kind)[0]
     return (
@@ -114,6 +129,9 @@ const LockTokensAccount = ({ tokenOwnerRecordPk }) => {
             curr.push({
               mintPk: next.mint.publicKey,
               mint: next.mint.account,
+              mintCfg: mintCfgs!.find((cfg) =>
+                cfg.mint.equals(next.mint.publicKey)
+              ) as VotingMint,
               currentAmount: isUnlockedType
                 ? next.available
                 : next.currentlyLocked,
@@ -276,6 +294,15 @@ const LockTokensAccount = ({ tokenOwnerRecordPk }) => {
                     )}
                   </div>
                   {reducedDeposits?.map((x, idx) => {
+                    const kindIsNone = x.lockUpKind === 'none'
+                    const minReqLockupDays: number | null =
+                      client?.hasMinRequired &&
+                      typeof x.mintCfg?.minRequiredLockupSaturationSecs !==
+                        'undefined'
+                        ? secsToDays(
+                            x.mintCfg?.minRequiredLockupSaturationSecs.toNumber()
+                          )
+                        : null
                     const availableTokens = fmtMintAmount(
                       x.mint,
                       x.currentAmount
@@ -295,20 +322,34 @@ const LockTokensAccount = ({ tokenOwnerRecordPk }) => {
                     })
                     return (
                       <div key={idx} className={mainBoxesClasses}>
-                        <p className="text-fgd-3">
-                          {`${tokenName} ${
-                            x.lockUpKind === 'none' ? 'Deposited' : 'Locked'
-                          }`}
-                        </p>
-                        <span className="hero-text">
-                          {availableTokens}
+                        <div className="flex shrink-0 justify-between w-full">
+                          <p className="text-fgd-3">
+                            {`${tokenName} ${
+                              kindIsNone ? 'Deposited' : 'Locked'
+                            }`}
+                          </p>
+                        </div>
+                        <div className="flex justify-center items-center">
+                          <span className="hero-text">{availableTokens}</span>
                           {price ? (
                             <span className="font-normal text-xs ml-2">
                               <span className="text-fgd-3">≈</span>$
                               {formatter.format(price)}
                             </span>
                           ) : null}
-                        </span>
+                          {kindIsNone && minReqLockupDays ? (
+                            <Tooltip
+                              content={`Minimum Lockup Required - There is a minimum required lockup time of ${getFormattedStringFromDays(
+                                minReqLockupDays
+                              )} to gain votes`}
+                            >
+                              <div className="cursor-help flex font-normal items-center text-xs ml-3 rounded-full bg-bkg-3 px-2 py-1">
+                                <LockClosedIconSolid className="h-3 mr-1 text-primary-light w-3" />
+                                Required
+                              </div>
+                            </Tooltip>
+                          ) : null}
+                        </div>
                       </div>
                     )
                   })}
@@ -359,7 +400,7 @@ const LockTokensAccount = ({ tokenOwnerRecordPk }) => {
                   </p>
                   <Button onClick={() => setIsLockModalOpen(true)}>
                     <div className="flex items-center">
-                      <LockClosedIcon className="h-5 mr-1.5 w-5" />
+                      <LockClosedIconOutline className="h-5 mr-1.5 w-5" />
                       <span>Lock Tokens</span>
                     </div>
                   </Button>
@@ -373,7 +414,7 @@ const LockTokensAccount = ({ tokenOwnerRecordPk }) => {
                 </p>
                 <Button onClick={() => setIsLockModalOpen(true)}>
                   <div className="flex items-center">
-                    <LockClosedIcon className="h-5 mr-1.5 w-5" />
+                    <LockClosedIconOutline className="h-5 mr-1.5 w-5" />
                     <span>Lock Tokens</span>
                   </div>
                 </Button>

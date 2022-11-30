@@ -116,10 +116,11 @@ export const getDeposits = async ({
         // If we have zero baseline deposits with power
         // add the initially locked to the power
         // as they wont be included in votingPowerEntry.data.votingPowerBaseline
+        // assume 1:1 for power and amountInitiallyLockedNative
         if (zeroBaselineDepositsWithPower.length > 0) {
           votingPowerFromDeposits = votingPowerFromDeposits.add(
             zeroBaselineDepositsWithPower
-              .map((d) => d.votingPower)
+              .map((d) => d.amountInitiallyLockedNative)
               .reduce((a, b) => a.add(b), new BN(0))
           )
         }
