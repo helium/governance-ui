@@ -45,6 +45,7 @@ import { accountsToPubkeyMap } from '@tools/sdk/accounts'
 import { HIDDEN_PROPOSALS } from '@components/instructions/tools'
 import { getRealmConfigAccountOrDefault } from '@tools/governance/configs'
 import { getProposals } from '@utils/GovernanceTools'
+import { heliumiseProposal } from 'HeliumVotePlugin/utils/heliumiseProposal'
 
 interface WalletStore extends State {
   connection: ConnectionContext
@@ -420,8 +421,10 @@ const useWalletStore = create<WalletStore>((set, get) => ({
         proposalsByGovernance
           .flatMap((p) => p)
           .filter((p) => !HIDDEN_PROPOSALS.has(p.pubkey.toBase58()))
+          .map(heliumiseProposal(realmMint))
       )
 
+      console.log('FETCHING PROPOSALS')
       set((s) => {
         s.selectedRealm.proposals = proposals
         s.selectedRealm.loading = false
@@ -434,6 +437,7 @@ const useWalletStore = create<WalletStore>((set, get) => ({
       const connectionContext = get().connection
       const programId = get().selectedRealm.programId
       const governances = get().selectedRealm.governances
+      const realmMint = get().selectedRealm.mint
       const proposalsByGovernance = await getProposals(
         Object.keys(governances).map((x) => new PublicKey(x)),
         connectionContext,
@@ -443,6 +447,7 @@ const useWalletStore = create<WalletStore>((set, get) => ({
         proposalsByGovernance
           .flatMap((p) => p)
           .filter((p) => !HIDDEN_PROPOSALS.has(p.pubkey.toBase58()))
+          .map(heliumiseProposal(realmMint))
       )
 
       await set((s) => {
@@ -465,12 +470,14 @@ const useWalletStore = create<WalletStore>((set, get) => ({
     },
 
     async fetchProposal(proposalPk: string) {
+      console.log('FETCH PROPOSAL')
       if (HIDDEN_PROPOSALS.has(proposalPk)) {
         return
       }
 
       const connection = get().connection.current
       const realmMints = get().selectedRealm.mints
+      const realmMint = get().selectedRealm.mint
       const set = get().set
 
       set((s) => {
@@ -479,10 +486,12 @@ const useWalletStore = create<WalletStore>((set, get) => ({
 
       const proposalPubKey = new PublicKey(proposalPk)
 
-      const proposal = await getGovernanceAccount<Proposal>(
-        connection,
-        proposalPubKey,
-        Proposal
+      const proposal = heliumiseProposal(realmMint)(
+        await getGovernanceAccount<Proposal>(
+          connection,
+          proposalPubKey,
+          Proposal
+        )
       )
 
       const proposalMint =
