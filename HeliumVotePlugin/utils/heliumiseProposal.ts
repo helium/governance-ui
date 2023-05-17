@@ -14,12 +14,10 @@ export const heliumiseProposal = (
   const minRequiredVotes = 100_000_000
   const hasMinRequiredVotes = totalVotes > minRequiredVotes
   const percentageOfYesVotes = (yesVotes / totalVotes) * 100
-  const hasSuperMajorityYesVotes =
-    percentageOfYesVotes > (account.voteThreshold?.value || 0)
+  const voteThreshold = account.voteThreshold?.value || 0
+  const hasSuperMajorityYesVotes = percentageOfYesVotes > voteThreshold
   const neededToPass =
-    yesVotes +
-    (((account.voteThreshold?.value || 0) - percentageOfYesVotes) / 100) *
-      yesVotes
+    yesVotes + ((voteThreshold - percentageOfYesVotes) / 100) * yesVotes
   account.maxVoteWeight = toBN(neededToPass, realmMint.decimals)
 
   // Proposal has reached end of voting period
