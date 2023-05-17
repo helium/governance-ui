@@ -1,25 +1,37 @@
-import { BN } from '@coral-xyz/anchor'
+import { toBN, amountAsNum } from '@helium/spl-utils'
 import { ProgramAccount, Proposal, ProposalState } from '@solana/spl-governance'
 import { MintInfo } from '@solana/spl-token'
-import { fmtTokenAmount } from '@utils/formatting'
 
-export const heliumiseProposal = (realmMint: MintInfo | undefined) => (
+export const heliumiseProposal = (
+  realmMint: MintInfo,
   proposal: ProgramAccount<Proposal>
 ): ProgramAccount<Proposal> => {
+  // helium requires super majority logic
+  // and at least 100M to be voted on a proposal
   const { pubkey, account, owner } = proposal
-  const maxVoteWeight = account.maxVoteWeight
+  const yesVotes = amountAsNum(account.getYesVoteCount(), realmMint)
+  const totalVotes = yesVotes + amountAsNum(account.getNoVoteCount(), realmMint)
+  const minRequiredVotes = 100_000_000
+  const hasMinRequiredVotes = totalVotes > minRequiredVotes
+  const percentageOfYesVotes = (yesVotes / totalVotes) * 100
+  const hasSuperMajorityYesVotes =
+    percentageOfYesVotes > (account.voteThreshold?.value || 0)
+  const neededToPass = yesVotes + ((66 - percentageOfYesVotes) / 100) * yesVotes
+  account.maxVoteWeight = toBN(neededToPass, realmMint.decimals)
 
-  const yesVoteCount = fmtTokenAmount(
-    account.getYesVoteCount(),
-    realmMint?.decimals
-  )
-
-  const noVoteCount = fmtTokenAmount(
-    account.getNoVoteCount(),
-    realmMint?.decimals
-  )
-
-  const minimumRequiredVoted = yesVoteCount + noVoteCount > 100_000_000
+  // Proposal has reached end of voting period
+  // and has been finalized
+  if (
+    account.isVoteFinalized() &&
+    (account.state === ProposalState.Defeated ||
+      account.state === ProposalState.Succeeded)
+  ) {
+    if (!hasMinRequiredVotes || !hasSuperMajorityYesVotes) {
+      account.state = ProposalState.Defeated
+    } else {
+      account.state = ProposalState.Succeeded
+    }
+  }
 
   return {
     pubkey,

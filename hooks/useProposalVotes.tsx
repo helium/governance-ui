@@ -52,14 +52,14 @@ export default function useProposalVotes(proposal?: Proposal) {
       'Proposal has no vote threshold (this shouldnt be possible)'
     )
 
-  // note this can be WRONG if the proposal status is vetoed
-  const maxVoteWeight = isPluginCommunityVoting
-    ? maxVoteRecord.account.maxVoterWeight
-    : getProposalMaxVoteWeight(realm.account, proposal, proposalMint)
+  // note this can be WRONG if ts proposal status is vetoed
+  const maxVoteWeight = getProposalMaxVoteWeight(
+    realm.account,
+    proposal,
+    proposalMint
+  )
 
-  const minimumYesVotes =
-    fmtTokenAmount(maxVoteWeight, proposalMint.decimals) *
-    (voteThresholdPct / 100)
+  const minimumYesVotes = fmtTokenAmount(maxVoteWeight, proposalMint.decimals)
 
   const yesVotePct = calculatePct(proposal.getYesVoteCount(), maxVoteWeight)
   const isMultiProposal = proposal?.options?.length > 1

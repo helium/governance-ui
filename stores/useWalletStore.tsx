@@ -421,7 +421,7 @@ const useWalletStore = create<WalletStore>((set, get) => ({
         proposalsByGovernance
           .flatMap((p) => p)
           .filter((p) => !HIDDEN_PROPOSALS.has(p.pubkey.toBase58()))
-          .map(heliumiseProposal(realmMint))
+          .map((p) => heliumiseProposal(realmMint, p))
       )
 
       console.log('FETCHING PROPOSALS')
@@ -437,17 +437,23 @@ const useWalletStore = create<WalletStore>((set, get) => ({
       const connectionContext = get().connection
       const programId = get().selectedRealm.programId
       const governances = get().selectedRealm.governances
-      const realmMint = get().selectedRealm.mint
       const proposalsByGovernance = await getProposals(
         Object.keys(governances).map((x) => new PublicKey(x)),
         connectionContext,
         programId!
       )
+
+      const realmMints = get().selectedRealm.mints
       const proposals = accountsToPubkeyMap(
         proposalsByGovernance
           .flatMap((p) => p)
           .filter((p) => !HIDDEN_PROPOSALS.has(p.pubkey.toBase58()))
-          .map(heliumiseProposal(realmMint))
+          .map((p) =>
+            heliumiseProposal(
+              realmMints[p.account.governingTokenMint.toBase58()],
+              p
+            )
+          )
       )
 
       await set((s) => {
@@ -477,7 +483,6 @@ const useWalletStore = create<WalletStore>((set, get) => ({
 
       const connection = get().connection.current
       const realmMints = get().selectedRealm.mints
-      const realmMint = get().selectedRealm.mint
       const set = get().set
 
       set((s) => {
@@ -486,12 +491,15 @@ const useWalletStore = create<WalletStore>((set, get) => ({
 
       const proposalPubKey = new PublicKey(proposalPk)
 
-      const proposal = heliumiseProposal(realmMint)(
-        await getGovernanceAccount<Proposal>(
-          connection,
-          proposalPubKey,
-          Proposal
-        )
+      let proposal = await getGovernanceAccount<Proposal>(
+        connection,
+        proposalPubKey,
+        Proposal
+      )
+
+      proposal = heliumiseProposal(
+        realmMints[proposal.account.governingTokenMint.toBase58()],
+        proposal
       )
 
       const proposalMint =
