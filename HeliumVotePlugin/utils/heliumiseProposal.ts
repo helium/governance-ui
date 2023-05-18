@@ -26,7 +26,7 @@ const calculateAdditionalYesVotesNeeded = (
   return additionalYesVotesNeeded
 }
 
-export const MIN_REQUIRED_VOTES = 100000
+export const MIN_REQUIRED_VOTES = 100000000
 export const SUPER_MAJORITY = 0.66
 export const heliumiseProposal = (
   realmMint: MintInfo,
