@@ -210,6 +210,8 @@ export default function ProposalDetails({
           <ApprovalProgress
             progress={voteData.yesVoteProgress}
             votesRequired={voteData.yesVotesRequired}
+            totalVotes={voteData.totalVoteCount}
+            minTotalVotesRequired={voteData.minimumTotalVotes}
           />
         </div>
       </div>

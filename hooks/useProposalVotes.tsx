@@ -29,9 +29,11 @@ export default function useProposalVotes(proposal?: Proposal) {
       yesVoteCount: undefined,
       noVoteCount: undefined,
       minimumYesVotes: undefined,
+      minimumTotalVotes: undefined,
       yesVotesRequired: undefined,
       relativeNoVotes: undefined,
       relativeYesVotes: undefined,
+      totalVoteCount: undefined,
     }
 
   const isCommunityVote =
@@ -52,7 +54,7 @@ export default function useProposalVotes(proposal?: Proposal) {
       'Proposal has no vote threshold (this shouldnt be possible)'
     )
 
-  // note this can be WRONG if ts proposal status is vetoed
+  // note this can be WRONG if the proposal status is vetoed
   const maxVoteWeight = getProposalMaxVoteWeight(
     realm.account,
     proposal,
@@ -60,6 +62,7 @@ export default function useProposalVotes(proposal?: Proposal) {
   )
 
   const minimumYesVotes = fmtTokenAmount(maxVoteWeight, proposalMint.decimals)
+  const minimumTotalVotes = (proposal as any).getMinimumTotalVotes() as number
 
   const yesVotePct = calculatePct(proposal.getYesVoteCount(), maxVoteWeight)
   const isMultiProposal = proposal?.options?.length > 1
@@ -97,7 +100,9 @@ export default function useProposalVotes(proposal?: Proposal) {
     relativeYesVotes,
     relativeNoVotes,
     minimumYesVotes,
+    minimumTotalVotes,
     yesVotesRequired,
+    totalVoteCount,
   }
 
   // @asktree: you may be asking yourself, "is this different from the more succinct way to write this?"

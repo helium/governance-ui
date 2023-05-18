@@ -143,6 +143,8 @@ const Proposal = () => {
                   <div className="pb-3">
                     <ApprovalProgress
                       votesRequired={voteData.yesVotesRequired}
+                      totalVotes={voteData.totalVoteCount}
+                      minTotalVotesRequired={voteData.minimumTotalVotes}
                       progress={voteData.yesVoteProgress}
                       showBg
                     />

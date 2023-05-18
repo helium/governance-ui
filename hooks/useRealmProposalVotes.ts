@@ -13,6 +13,8 @@ const DEFAULT_VOTE = {
   noVoteCount: 0,
   minimumYesVotes: 0,
   yesVotesRequired: 0,
+  totalVoteCount: 0,
+  minimumTotalVotes: 0,
 }
 
 type UseRealmProposalVoteReturnType = typeof DEFAULT_VOTE
@@ -65,9 +67,11 @@ export default function useRealmProposalVotes(
         (proposal.isVoteFinalized() && proposal.voteThreshold?.value) ||
         governance.config.communityVoteThreshold.value!
 
-      const minimumYesVotes =
-        fmtTokenAmount(maxVoteWeight, proposalMint.account.decimals) *
-        (voteThresholdPct / 100)
+      const minimumYesVotes = fmtTokenAmount(
+        maxVoteWeight,
+        proposalMint.account.decimals
+      )
+      const minimumTotalVotes = (proposal as any).getMinimumTotalVotes() as number
 
       const yesVotePct = calculatePct(proposal.getYesVoteCount(), maxVoteWeight)
       const yesVoteProgress = (yesVotePct / voteThresholdPct) * 100
@@ -86,8 +90,7 @@ export default function useRealmProposalVotes(
           )
         : 0
 
-      // const totalVoteCount = yesVoteCount + noVoteCount
-
+      const totalVoteCount = yesVoteCount + noVoteCount
       // const getRelativeVoteCount = (voteCount: number) =>
       //   totalVoteCount === 0 ? 0 : (voteCount / totalVoteCount) * 100
 
@@ -110,6 +113,8 @@ export default function useRealmProposalVotes(
         noVoteCount,
         minimumYesVotes,
         yesVotesRequired,
+        totalVoteCount,
+        minimumTotalVotes,
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO please fix, it can cause difficult bugs. You might wanna check out https://bobbyhadz.com/blog/react-hooks-exhaustive-deps for info. -@asktree

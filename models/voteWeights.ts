@@ -597,8 +597,5 @@ export function getProposalMaxVoteWeight(
     return governingTokenMint.supply
   }
 
-  return getMintMaxVoteWeight(
-    governingTokenMint,
-    realm.config.communityMintMaxVoteWeightSource
-  )
+  return proposal.maxVoteWeight!
 }
