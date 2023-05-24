@@ -62,7 +62,9 @@ export default function useProposalVotes(proposal?: Proposal) {
   )
 
   const minimumYesVotes = fmtTokenAmount(maxVoteWeight, proposalMint.decimals)
-  const minimumTotalVotes = (proposal as any).getMinimumTotalVotes() as number
+  const minimumTotalVotes = (proposal as any).getMinimumTotalVotes
+    ? (proposal as any).getMinimumTotalVotes()
+    : (0 as number)
 
   const yesVotePct = calculatePct(proposal.getYesVoteCount(), maxVoteWeight)
   const isMultiProposal = proposal?.options?.length > 1

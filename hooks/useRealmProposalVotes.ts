@@ -71,7 +71,10 @@ export default function useRealmProposalVotes(
         maxVoteWeight,
         proposalMint.account.decimals
       )
-      const minimumTotalVotes = (proposal as any).getMinimumTotalVotes() as number
+
+      const minimumTotalVotes = (proposal as any).getMinimumTotalVotes
+        ? (proposal as any).getMinimumTotalVotes()
+        : (0 as number)
 
       const yesVotePct = calculatePct(proposal.getYesVoteCount(), maxVoteWeight)
       const yesVoteProgress = (yesVotePct / voteThresholdPct) * 100

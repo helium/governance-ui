@@ -28,7 +28,7 @@ const QuorumProgress = ({
   totalVotes,
   minTotalVotesRequired,
 }: Props & GenericProps) => {
-  const hasMinimumTotal = (totalVotes || 0) > (minTotalVotesRequired || 0)
+  const hasMinimumTotal = (totalVotes || 0) >= (minTotalVotesRequired || 0)
 
   return (
     <div className={`${showBg ? 'bg-bkg-1 p-3' : ''} rounded-md`}>

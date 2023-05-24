@@ -35,7 +35,6 @@ export const heliumiseProposal = (
   // helium requires super majority logic
   // and at least 100M to be voted on a proposal
   const { pubkey, account, owner } = proposal
-
   const yesVotesBN = account.getYesVoteCount()
   const noVotesBN = account.getNoVoteCount()
   const yesVotesNum = amountAsNum(yesVotesBN, realmMint)
