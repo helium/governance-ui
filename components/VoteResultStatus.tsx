@@ -26,7 +26,7 @@ const FailResult = () => {
   const { proposal } = useProposal()
   const voteData = useProposalVotes(proposal?.account)
   const hasMinimumTotal =
-    (voteData.totalVoteCount || 0) > (voteData.minimumTotalVotes || 0)
+    (voteData.totalVoteCount || 0) >= (voteData.minimumTotalVotes || 0)
 
   return voteData.yesVotesRequired === undefined ? null : (
     <div className="bg-bkg-1 p-3 rounded-md">

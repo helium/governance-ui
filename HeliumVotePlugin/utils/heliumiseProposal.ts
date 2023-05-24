@@ -54,6 +54,7 @@ export const heliumiseProposal = (
     yesVotesNum + additionalYesVotesNeeded,
     realmMint.decimals
   )
+  ;(account as any).isHeliumised = true
   ;(account as any).getMinimumTotalVotes = () => MIN_REQUIRED_VOTES
 
   // Proposal has reached end of voting period

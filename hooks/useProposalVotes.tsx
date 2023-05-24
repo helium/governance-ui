@@ -55,13 +55,17 @@ export default function useProposalVotes(proposal?: Proposal) {
     )
 
   // note this can be WRONG if the proposal status is vetoed
-  const maxVoteWeight = getProposalMaxVoteWeight(
-    realm.account,
-    proposal,
-    proposalMint
-  )
+  const maxVoteWeight = isPluginCommunityVoting
+    ? (proposal as any).isHeliumised
+      ? getProposalMaxVoteWeight(realm.account, proposal, proposalMint)
+      : maxVoteRecord.account.maxVoterWeight
+    : getProposalMaxVoteWeight(realm.account, proposal, proposalMint)
 
-  const minimumYesVotes = fmtTokenAmount(maxVoteWeight, proposalMint.decimals)
+  const minimumYesVotes = (proposal as any).isHeliumised
+    ? fmtTokenAmount(maxVoteWeight, proposalMint.decimals)
+    : fmtTokenAmount(maxVoteWeight, proposalMint.decimals) *
+      (voteThresholdPct / 100)
+
   const minimumTotalVotes = (proposal as any).getMinimumTotalVotes
     ? (proposal as any).getMinimumTotalVotes()
     : (0 as number)

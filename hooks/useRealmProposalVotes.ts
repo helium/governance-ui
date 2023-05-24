@@ -67,10 +67,10 @@ export default function useRealmProposalVotes(
         (proposal.isVoteFinalized() && proposal.voteThreshold?.value) ||
         governance.config.communityVoteThreshold.value!
 
-      const minimumYesVotes = fmtTokenAmount(
-        maxVoteWeight,
-        proposalMint.account.decimals
-      )
+      const minimumYesVotes = (proposal as any).isHeliumised
+        ? fmtTokenAmount(maxVoteWeight, proposalMint.account.decimals)
+        : fmtTokenAmount(maxVoteWeight, proposalMint.account.decimals) *
+          (voteThresholdPct / 100)
 
       const minimumTotalVotes = (proposal as any).getMinimumTotalVotes
         ? (proposal as any).getMinimumTotalVotes()

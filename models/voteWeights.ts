@@ -597,5 +597,10 @@ export function getProposalMaxVoteWeight(
     return governingTokenMint.supply
   }
 
-  return proposal.maxVoteWeight!
+  return (proposal as any).isHeliumised
+    ? proposal.maxVoteWeight!
+    : getMintMaxVoteWeight(
+        governingTokenMint,
+        realm.config.communityMintMaxVoteWeightSource
+      )
 }
