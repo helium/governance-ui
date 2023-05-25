@@ -43,6 +43,9 @@ const calculateAdditionalYesVotesNeeded = (
 
 export const MIN_REQUIRED_VOTES = 100000000
 export const SUPER_MAJORITY = 66
+
+let hvsrProgram
+let registrarAcc
 export const heliumiseProposal = async ({
   realm,
   realmMint,
@@ -63,11 +66,14 @@ export const heliumiseProposal = async ({
     skipPreflight: true,
   })
   const { pubkey, account, owner } = proposal
-  const hvsrProgram = await init(provider)
-  const [registrar] = registrarKey(realm.pubkey, account.governingTokenMint)
-  const registrarAcc = await hvsrProgram.account.registrar.fetchNullable(
-    registrar
-  )
+  if (!hvsrProgram) {
+    hvsrProgram = await init(provider)
+  }
+
+  if (!registrarAcc) {
+    const [registrar] = registrarKey(realm.pubkey, account.governingTokenMint)
+    registrarAcc = await hvsrProgram.account.registrar.fetchNullable(registrar)
+  }
 
   const digitShift = registrarAcc?.votingMints[0].digitShift || 0
   const digitShiftCorrection = Math.abs(digitShift) * 10 || 1
