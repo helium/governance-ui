@@ -71,12 +71,20 @@ export default function useProposalVotes(proposal?: Proposal) {
     : (0 as number)
 
   const yesVotePct = calculatePct(proposal.getYesVoteCount(), maxVoteWeight)
+
   const isMultiProposal = proposal?.options?.length > 1
   const yesVoteCount = !isMultiProposal
-    ? fmtTokenAmount(proposal.getYesVoteCount(), proposalMint.decimals)
+    ? (proposal as any).isHeliumised
+      ? fmtTokenAmount(proposal.getYesVoteCount(), proposalMint.decimals) *
+        (proposal as any).digitShiftCorrection
+      : fmtTokenAmount(proposal.getYesVoteCount(), proposalMint.decimals)
     : 0
+
   const noVoteCount = !isMultiProposal
-    ? fmtTokenAmount(proposal.getNoVoteCount(), proposalMint.decimals)
+    ? (proposal as any).isHeliumised
+      ? fmtTokenAmount(proposal.getNoVoteCount(), proposalMint.decimals) *
+        (proposal as any).digitShiftCorrection
+      : fmtTokenAmount(proposal.getNoVoteCount(), proposalMint.decimals)
     : 0
 
   const totalVoteCount = yesVoteCount + noVoteCount

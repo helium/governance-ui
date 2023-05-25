@@ -345,6 +345,7 @@ const useWalletStore = create<WalletStore>((set, get) => ({
         )
       })
 
+      const wallet = get().mockWallet ?? get().current
       const realmMints = get().selectedRealm.mints
       const realmMintPk = realm.account.communityMint
       const realmMint = realmMints[realmMintPk.toBase58()]
@@ -418,15 +419,23 @@ const useWalletStore = create<WalletStore>((set, get) => ({
       )
 
       const proposals = accountsToPubkeyMap(
-        proposalsByGovernance
-          .flatMap((p) => p)
-          .filter((p) => !HIDDEN_PROPOSALS.has(p.pubkey.toBase58()))
-          .map((p) => {
-            if (p.account.governingTokenMint.equals(realmMintPk)) {
-              return heliumiseProposal(realmMint, p)
-            }
-            return p
-          })
+        await Promise.all(
+          proposalsByGovernance
+            .flatMap((p) => p)
+            .filter((p) => !HIDDEN_PROPOSALS.has(p.pubkey.toBase58()))
+            .map(async (p) => {
+              if (p.account.governingTokenMint.equals(realmMintPk)) {
+                return await heliumiseProposal({
+                  realm,
+                  realmMint,
+                  proposal: p,
+                  wallet,
+                  connection,
+                })
+              }
+              return p
+            })
+        )
       )
 
       console.log('FETCHING PROPOSALS')
@@ -440,6 +449,9 @@ const useWalletStore = create<WalletStore>((set, get) => ({
       console.log('REFETCH PROPOSALS')
       const set = get().set
       const connectionContext = get().connection
+      const connection = connectionContext.current
+      const wallet = get().mockWallet ?? get().current
+      const realm = get().selectedRealm.realm!
       const programId = get().selectedRealm.programId
       const governances = get().selectedRealm.governances
       const proposalsByGovernance = await getProposals(
@@ -451,18 +463,24 @@ const useWalletStore = create<WalletStore>((set, get) => ({
       const realmMintPk = get().selectedRealm.realm!.account.communityMint
       const realmMints = get().selectedRealm.mints
       const proposals = accountsToPubkeyMap(
-        proposalsByGovernance
-          .flatMap((p) => p)
-          .filter((p) => !HIDDEN_PROPOSALS.has(p.pubkey.toBase58()))
-          .map((p) => {
-            if (p.account.governingTokenMint.equals(realmMintPk)) {
-              return heliumiseProposal(
-                realmMints[p.account.governingTokenMint.toBase58()],
-                p
-              )
-            }
-            return p
-          })
+        await Promise.all(
+          proposalsByGovernance
+            .flatMap((p) => p)
+            .filter((p) => !HIDDEN_PROPOSALS.has(p.pubkey.toBase58()))
+            .map(async (p) => {
+              if (p.account.governingTokenMint.equals(realmMintPk)) {
+                return await heliumiseProposal({
+                  realm,
+                  realmMint:
+                    realmMints[p.account.governingTokenMint.toBase58()],
+                  proposal: p,
+                  connection,
+                  wallet,
+                })
+              }
+              return p
+            })
+        )
       )
 
       await set((s) => {
@@ -491,6 +509,7 @@ const useWalletStore = create<WalletStore>((set, get) => ({
       }
 
       const connection = get().connection.current
+      const wallet = get().mockWallet ?? get().current
       const realmMintPk = get().selectedRealm.realm!.account.communityMint
       const realmMints = get().selectedRealm.mints
       const set = get().set
@@ -506,13 +525,6 @@ const useWalletStore = create<WalletStore>((set, get) => ({
         proposalPubKey,
         Proposal
       )
-
-      if (proposal.account.governingTokenMint.equals(realmMintPk)) {
-        proposal = heliumiseProposal(
-          realmMints[proposal.account.governingTokenMint.toBase58()],
-          proposal
-        )
-      }
 
       const proposalMint =
         realmMints[proposal.account.governingTokenMint.toBase58()]
@@ -560,6 +572,16 @@ const useWalletStore = create<WalletStore>((set, get) => ({
         governance.account.realm,
         Realm
       )
+
+      if (proposal.account.governingTokenMint.equals(realmMintPk)) {
+        proposal = await heliumiseProposal({
+          realm,
+          realmMint: realmMints[proposal.account.governingTokenMint.toBase58()],
+          proposal,
+          connection,
+          wallet,
+        })
+      }
 
       const tokenRole = realm.account.communityMint.equals(
         proposal.account.governingTokenMint

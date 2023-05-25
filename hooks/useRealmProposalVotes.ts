@@ -68,7 +68,8 @@ export default function useRealmProposalVotes(
         governance.config.communityVoteThreshold.value!
 
       const minimumYesVotes = (proposal as any).isHeliumised
-        ? fmtTokenAmount(maxVoteWeight, proposalMint.account.decimals)
+        ? fmtTokenAmount(maxVoteWeight, proposalMint.account.decimals) *
+          (proposal as any).digitShiftCorrection
         : fmtTokenAmount(maxVoteWeight, proposalMint.account.decimals) *
           (voteThresholdPct / 100)
 
@@ -80,17 +81,29 @@ export default function useRealmProposalVotes(
       const yesVoteProgress = (yesVotePct / voteThresholdPct) * 100
 
       const isMultiProposal = proposal?.options?.length > 1
+
       const yesVoteCount = !isMultiProposal
-        ? fmtTokenAmount(
-            proposal.getYesVoteCount(),
-            proposalMint.account.decimals
-          )
+        ? (proposal as any).isHeliumised
+          ? fmtTokenAmount(
+              proposal.getYesVoteCount(),
+              proposalMint.account.decimals
+            ) * (proposal as any).digitShiftCorrection
+          : fmtTokenAmount(
+              proposal.getYesVoteCount(),
+              proposalMint.account.decimals
+            )
         : 0
+
       const noVoteCount = !isMultiProposal
-        ? fmtTokenAmount(
-            proposal.getNoVoteCount(),
-            proposalMint.account.decimals
-          )
+        ? (proposal as any).isHeliumised
+          ? fmtTokenAmount(
+              proposal.getNoVoteCount(),
+              proposalMint.account.decimals
+            ) * (proposal as any).digitShiftCorrection
+          : fmtTokenAmount(
+              proposal.getNoVoteCount(),
+              proposalMint.account.decimals
+            )
         : 0
 
       const totalVoteCount = yesVoteCount + noVoteCount
