@@ -22,23 +22,6 @@ const calculateAdditionalYesVotesNeeded = (
   const additionalYesVotes = targetVotes - yesVotes
 
   return additionalYesVotes > 0 ? additionalYesVotes : 0
-  // const totalVotes = yesVotes + noVotes
-  // const percentageOfYesVotes = yesVotes / totalVotes
-  // let additionalYesVotesNeeded = 0
-
-  // if (percentageOfYesVotes < percentageOfYesVotesWanted) {
-  //   // Calculate the target number of "yes" votes needed
-  //   const targetPercentage = percentageOfYesVotesWanted * 100
-  //   const targetYesVotes = Math.ceil(
-  //     (targetPercentage * totalVotes - 100 * yesVotes) /
-  //       (100 - targetPercentage)
-  //   )
-
-  //   // Calculate the additional "yes" votes needed
-  //   additionalYesVotesNeeded = targetYesVotes - yesVotes
-  // }
-
-  // return additionalYesVotesNeeded
 }
 
 export const MIN_REQUIRED_VOTES = 100000000

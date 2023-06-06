@@ -15,9 +15,9 @@ import ProposalVoteResult from '@components/ProposalVoteResults'
 import ProposalRemainingVotingTime from '@components/ProposalRemainingVotingTime'
 
 export default function Explore() {
+  const connection = useWalletStore((s) => s.connection)
   const { proposal, governance } = useProposal()
   const [highlighted, setHighlighted] = useState<string | undefined>()
-  const connection = useWalletStore((s) => s.connection)
   const records = useVoteRecords(proposal)
   const signatories = useSignatories(proposal)
   const router = useRouter()

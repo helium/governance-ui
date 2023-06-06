@@ -20,6 +20,7 @@ import { BN } from '@coral-xyz/anchor'
 import useWalletStore from 'stores/useWalletStore'
 import useGovernanceAssetsStore from 'stores/useGovernanceAssetsStore'
 import { PublicKey } from '@solana/web3.js'
+import { heliumiseTopVoters } from 'HeliumVotePlugin/utils/heliumiseTopVoters'
 
 export default function useVoteRecords(proposal?: ProgramAccount<Proposal>) {
   const { getRpcContext } = useRpcContext()
@@ -43,7 +44,10 @@ export default function useVoteRecords(proposal?: ProgramAccount<Proposal>) {
   ///
 
   const [context, setContext] = useState<RpcContext | null>(null)
-  const client = useVotePluginsClientStore((s) => s.state.vsrClient)
+  const [client, heliumVsrRegistrar] = useVotePluginsClientStore((s) => [
+    s.state.vsrClient,
+    s.state.heliumVsrRegistrar,
+  ])
   const connection = useWalletStore((s) => s.connection)
   const governingTokenMintPk = proposal?.account.governingTokenMint
 
@@ -90,7 +94,7 @@ export default function useVoteRecords(proposal?: ProgramAccount<Proposal>) {
   }, [realm])
   const topVoters = useMemo(() => {
     if (realm && proposal && mint) {
-      return buildTopVoters(
+      const voters = buildTopVoters(
         voteRecords,
         tokenOwnerRecords,
         realm,
@@ -98,6 +102,19 @@ export default function useVoteRecords(proposal?: ProgramAccount<Proposal>) {
         mint,
         undecidedDepositByVoteRecord
       )
+
+      if (
+        vsrMode === 'helium' &&
+        proposal.account.governingTokenMint.equals(realm.account.communityMint)
+      ) {
+        return heliumiseTopVoters({
+          topVoters: voters,
+          registrar: heliumVsrRegistrar,
+          proposal: proposal,
+        })
+      }
+
+      return voters
     }
 
     return []
@@ -108,6 +125,8 @@ export default function useVoteRecords(proposal?: ProgramAccount<Proposal>) {
     proposal,
     mint,
     undecidedDepositByVoteRecord,
+    vsrMode,
+    heliumVsrRegistrar,
   ])
 
   //VSR only
