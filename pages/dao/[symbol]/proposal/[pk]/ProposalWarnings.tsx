@@ -112,24 +112,17 @@ const useProposalSafetyCheck = () => {
   const { transactions, proposal } = useProposal()
   const realmConfigWarnings = useMemo(() => {
     if (realmInfo === undefined || config === undefined) return undefined
-
-    if (
-      realm?.account.communityMint &&
-      proposal?.account.governingTokenMint.equals(realm.account.communityMint)
-    ) {
-      return 'heliumCommunity'
-    }
-
+    const warnings: string[] = []
     const ixs = Object.values(transactions).flatMap((pix) =>
       pix.account.getAllInstructions()
     )
 
-    const realmConfigWarnings = ixs.map((ix) => {
+    ixs.map((ix) => {
       if (ix.programId.equals(realmInfo.programId) && ix.data[0] === 19) {
-        return 'setGovernanceConfig'
+        warnings.push('setGovernanceConfig')
       }
       if (ix.programId.equals(realmInfo.programId) && ix.data[0] === 22) {
-        return 'setRealmConfig'
+        warnings.push('setRealmConfig')
       }
       if (
         ix.accounts.find(
@@ -137,14 +130,21 @@ const useProposalSafetyCheck = () => {
         ) !== undefined
       ) {
         if (ix.programId.equals(realmInfo.programId)) {
-          return 'setRealmConfig'
+          warnings.push('setRealmConfig')
         } else {
-          return 'ThirdPartyInstructionWritesConfig'
+          warnings.push('ThirdPartyInstructionWritesConfig')
         }
       }
     })
 
-    return realmConfigWarnings
+    if (
+      realm?.account.communityMint &&
+      proposal?.account.governingTokenMint.equals(realm.account.communityMint)
+    ) {
+      warnings.push('heliumCommunity')
+    }
+
+    return warnings[0]
   }, [config, transactions, realmInfo, realm, proposal])
 
   return realmConfigWarnings
