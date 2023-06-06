@@ -510,7 +510,7 @@ const useWalletStore = create<WalletStore>((set, get) => ({
 
       const connection = get().connection.current
       const wallet = get().mockWallet ?? get().current
-      const realmMintPk = get().selectedRealm.realm!.account.communityMint
+      const realmMintPk = get().selectedRealm.realm?.account.communityMint
       const realmMints = get().selectedRealm.mints
       const set = get().set
 
@@ -573,7 +573,10 @@ const useWalletStore = create<WalletStore>((set, get) => ({
         Realm
       )
 
-      if (proposal.account.governingTokenMint.equals(realmMintPk)) {
+      if (
+        realmMintPk &&
+        proposal.account.governingTokenMint.equals(realmMintPk)
+      ) {
         proposal = await heliumiseProposal({
           realm,
           realmMint: realmMints[proposal.account.governingTokenMint.toBase58()],
