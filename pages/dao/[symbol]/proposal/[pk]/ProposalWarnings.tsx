@@ -1,4 +1,3 @@
-import { HNT_MINT } from '@helium/spl-utils'
 import { ExclamationCircleIcon } from '@heroicons/react/solid'
 import useProposal from '@hooks/useProposal'
 import useRealm from '@hooks/useRealm'
