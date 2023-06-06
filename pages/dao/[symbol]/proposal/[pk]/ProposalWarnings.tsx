@@ -1,3 +1,4 @@
+import { HNT_MINT } from '@helium/spl-utils'
 import { ExclamationCircleIcon } from '@heroicons/react/solid'
 import useProposal from '@hooks/useProposal'
 import useRealm from '@hooks/useRealm'
@@ -109,7 +110,7 @@ const HeliumQuorumWarning = () => (
 
 const useProposalSafetyCheck = () => {
   const { config, realmInfo } = useRealm()
-  const { transactions } = useProposal()
+  const { transactions, proposal } = useProposal()
   const realmConfigWarnings = useMemo(() => {
     if (realmInfo === undefined || config === undefined) return undefined
 
@@ -125,6 +126,12 @@ const useProposalSafetyCheck = () => {
         return 'setRealmConfig'
       }
       if (
+        realmInfo.communityMint &&
+        proposal?.account.governingTokenMint.equals(realmInfo.communityMint)
+      ) {
+        return 'heliumCommunity'
+      }
+      if (
         ix.accounts.find(
           (a) => a.isWritable && a.pubkey.equals(config.pubkey)
         ) !== undefined
@@ -138,7 +145,7 @@ const useProposalSafetyCheck = () => {
     })
 
     return realmConfigWarnings
-  }, [config, transactions, realmInfo])
+  }, [config, transactions, realmInfo, proposal])
 
   return realmConfigWarnings
 }
@@ -147,7 +154,7 @@ const ProposalWarnings = () => {
   const warnings = useProposalSafetyCheck()
   return (
     <>
-      <HeliumQuorumWarning />
+      {warnings?.includes('heliumCommunity') && <HeliumQuorumWarning />}
       {warnings?.includes('setGovernanceConfig') && <SetGovernanceConfig />}
       {warnings?.includes('setRealmConfig') && <SetRealmConfigWarning />}
       {warnings?.includes('ThirdPartyInstructionWritesConfig') && (
