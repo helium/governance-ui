@@ -108,10 +108,17 @@ const HeliumQuorumWarning = () => (
 )
 
 const useProposalSafetyCheck = () => {
-  const { config, realmInfo } = useRealm()
+  const { config, realmInfo, realm } = useRealm()
   const { transactions, proposal } = useProposal()
   const realmConfigWarnings = useMemo(() => {
     if (realmInfo === undefined || config === undefined) return undefined
+
+    if (
+      realm?.account.communityMint &&
+      proposal?.account.governingTokenMint.equals(realm.account.communityMint)
+    ) {
+      return 'heliumCommunity'
+    }
 
     const ixs = Object.values(transactions).flatMap((pix) =>
       pix.account.getAllInstructions()
@@ -123,12 +130,6 @@ const useProposalSafetyCheck = () => {
       }
       if (ix.programId.equals(realmInfo.programId) && ix.data[0] === 22) {
         return 'setRealmConfig'
-      }
-      if (
-        realmInfo.communityMint &&
-        proposal?.account.governingTokenMint.equals(realmInfo.communityMint)
-      ) {
-        return 'heliumCommunity'
       }
       if (
         ix.accounts.find(
@@ -144,7 +145,7 @@ const useProposalSafetyCheck = () => {
     })
 
     return realmConfigWarnings
-  }, [config, transactions, realmInfo, proposal])
+  }, [config, transactions, realmInfo, realm, proposal])
 
   return realmConfigWarnings
 }
