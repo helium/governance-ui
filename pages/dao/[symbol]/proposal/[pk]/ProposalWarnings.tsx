@@ -80,6 +80,33 @@ const SetGovernanceConfig = () => (
   </div>
 )
 
+const HeliumQuorumWarning = () => (
+  <div className="rounded-md bg-yellow-50 p-4">
+    <div className="flex">
+      <div className="flex-shrink-0">
+        <ExclamationCircleIcon
+          className="h-5 w-5 text-yellow-400"
+          aria-hidden="true"
+        />
+      </div>
+      <div className="ml-3">
+        <h3 className="text-sm font-medium text-yellow-800">
+          Disclaimer: The Helium Network&apos;s rules for voting differ from the
+          default rules on Realms.
+        </h3>
+        <div className="mt-2">
+          <p className="text-sm text-yellow-700">
+            As a result, viewing the results on realms.today is not
+            representative of the actual outcome under the Helium Network&apos;s
+            rules for HIP voting. For the correct results, please make sure to
+            view on realms.heliumvote.com
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+)
+
 const useProposalSafetyCheck = () => {
   const { config, realmInfo } = useRealm()
   const { transactions } = useProposal()
@@ -120,6 +147,7 @@ const ProposalWarnings = () => {
   const warnings = useProposalSafetyCheck()
   return (
     <>
+      <HeliumQuorumWarning />
       {warnings?.includes('setGovernanceConfig') && <SetGovernanceConfig />}
       {warnings?.includes('setRealmConfig') && <SetRealmConfigWarning />}
       {warnings?.includes('ThirdPartyInstructionWritesConfig') && (
