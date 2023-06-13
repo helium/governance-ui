@@ -149,6 +149,8 @@ const Proposal = () => {
                     <ApprovalProgress
                       votesRequired={voteData.yesVotesRequired}
                       progress={voteData.yesVoteProgress}
+                      totalVotes={voteData.totalVoteCount}
+                      minTotalVotesRequired={voteData.minimumTotalVotes}
                       showBg
                     />
                   </div>
