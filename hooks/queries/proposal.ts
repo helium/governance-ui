@@ -9,6 +9,9 @@ import { useMemo } from 'react'
 import { useRealmGovernancesQuery } from './governance'
 import queryClient from './queryClient'
 import useLegacyConnectionContext from '@hooks/useLegacyConnectionContext'
+import { useRealmCommunityMintInfoQuery } from './mintInfo'
+import { heliumiseProposal } from 'HeliumVotePlugin/utils/heliumiseProposal'
+import useWalletOnePointOh from '@hooks/useWalletOnePointOh'
 
 export const proposalQueryKeys = {
   all: (endpoint: string) => [endpoint, 'Proposal'],
@@ -25,15 +28,42 @@ export const proposalQueryKeys = {
 
 export const useProposalByPubkeyQuery = (pubkey: PublicKey | undefined) => {
   const connection = useLegacyConnectionContext()
+  const realm = useRealmQuery().data?.result
+  const wallet = useWalletOnePointOh()
+  const communityMint = useRealmCommunityMintInfoQuery().data?.result
 
-  const enabled = pubkey !== undefined
+  const enabled =
+    communityMint !== undefined && realm !== undefined && pubkey !== undefined
   const query = useQuery({
     queryKey: enabled
       ? proposalQueryKeys.byPubkey(connection.endpoint, pubkey)
       : undefined,
     queryFn: async () => {
       if (!enabled) throw new Error()
-      return asFindable(getProposal)(connection.current, pubkey)
+
+      const result = await asFindable(getProposal)(connection.current, pubkey)
+
+      if (
+        realm &&
+        result?.result?.account.governingTokenMint.equals(
+          realm.account.communityMint
+        ) &&
+        communityMint
+      ) {
+        console.log('DOING')
+        return {
+          ...result,
+          result: await heliumiseProposal({
+            realm,
+            realmMint: communityMint,
+            proposal: result.result,
+            wallet,
+            connection: connection.current,
+          }),
+        }
+      }
+
+      return result
     },
     enabled,
   })
@@ -57,9 +87,14 @@ export const useRouteProposalQuery = () => {
 export const useRealmProposalsQuery = () => {
   const connection = useLegacyConnectionContext()
   const realm = useRealmQuery().data?.result
+  const wallet = useWalletOnePointOh()
+  const communityMint = useRealmCommunityMintInfoQuery().data?.result
   const { data: governances } = useRealmGovernancesQuery()
 
-  const enabled = realm !== undefined && governances !== undefined
+  const enabled =
+    communityMint !== undefined &&
+    realm !== undefined &&
+    governances !== undefined
   const query = useQuery({
     queryKey: enabled
       ? proposalQueryKeys.byRealm(connection.endpoint, realm.pubkey)
@@ -82,7 +117,25 @@ export const useRealmProposalsQuery = () => {
         )
       })
 
-      return results
+      return await Promise.all(
+        results.map(async (p) => {
+          if (
+            realm &&
+            p.account.governingTokenMint.equals(realm.account.communityMint) &&
+            communityMint
+          ) {
+            return await heliumiseProposal({
+              realm,
+              realmMint: communityMint,
+              proposal: p,
+              wallet,
+              connection: connection.current,
+            })
+          }
+
+          return p
+        })
+      )
     },
     enabled,
   })

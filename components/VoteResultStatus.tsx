@@ -25,6 +25,8 @@ const ApprovalResult = () => (
 const FailResult = () => {
   const proposal = useRouteProposalQuery().data?.result
   const voteData = useProposalVotes(proposal?.account)
+  const hasMinimumTotal =
+    (voteData.totalVoteCount || 0) >= (voteData.minimumTotalVotes || 0)
 
   return voteData.yesVotesRequired === undefined ? null : (
     <div className="bg-bkg-1 p-3 rounded-md">
@@ -32,24 +34,37 @@ const FailResult = () => {
         <XCircleIcon className="h-5 mr-1.5 text-red w-5" />
         <div>
           <h4 className="mb-0">The proposal has failed</h4>
-          <p className="mb-0 text-fgd-2">{`${voteData.yesVotesRequired.toLocaleString(
-            undefined,
-            {
-              maximumFractionDigits: 0,
-            }
-          )} more Yes vote${
-            voteData.yesVotesRequired > 1 ? 's' : ''
-          } were needed`}</p>
+          {!hasMinimumTotal ? (
+            <p className="mb-0 text-fgd-2">
+              {`The proposal did not reach the minimum required total votes of ${voteData.minimumTotalVotes.toLocaleString(
+                undefined,
+                {
+                  maximumFractionDigits: 0,
+                }
+              )}`}
+            </p>
+          ) : (
+            <p className="mb-0 text-fgd-2">{`${voteData.yesVotesRequired.toLocaleString(
+              undefined,
+              {
+                maximumFractionDigits: 0,
+              }
+            )} more Yes vote${
+              voteData.yesVotesRequired > 1 ? 's' : ''
+            } were needed`}</p>
+          )}
         </div>
       </div>
-      <div className="bg-bkg-4 h-2 flex flex-grow mt-2.5 rounded w-full">
-        <div
-          style={{
-            width: `${voteData.yesVoteProgress}%`,
-          }}
-          className={`bg-fgd-3 flex rounded`}
-        ></div>
-      </div>
+      {hasMinimumTotal ? (
+        <div className="bg-bkg-4 h-2 flex flex-grow mt-2.5 rounded w-full">
+          <div
+            style={{
+              width: `${voteData.yesVoteProgress}%`,
+            }}
+            className={`bg-fgd-3 flex rounded`}
+          ></div>
+        </div>
+      ) : null}
     </div>
   )
 }

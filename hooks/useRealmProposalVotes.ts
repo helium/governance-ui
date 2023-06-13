@@ -12,7 +12,9 @@ const DEFAULT_VOTE = {
   yesVoteCount: 0,
   noVoteCount: 0,
   minimumYesVotes: 0,
+  minimumTotalVotes: 0,
   yesVotesRequired: 0,
+  totalVoteCount: 0,
 }
 
 type UseRealmProposalVoteReturnType = typeof DEFAULT_VOTE
@@ -65,28 +67,46 @@ export default function useRealmProposalVotes(
         (proposal.isVoteFinalized() && proposal.voteThreshold?.value) ||
         governance.config.communityVoteThreshold.value!
 
-      const minimumYesVotes =
-        fmtTokenAmount(maxVoteWeight, proposalMint.account.decimals) *
-        (voteThresholdPct / 100)
+      const minimumYesVotes = (proposal as any).isHeliumised
+        ? fmtTokenAmount(maxVoteWeight, proposalMint.account.decimals) *
+          (proposal as any).digitShiftCorrection
+        : fmtTokenAmount(maxVoteWeight, proposalMint.account.decimals) *
+          (voteThresholdPct / 100)
+
+      const minimumTotalVotes = (proposal as any).getMinimumTotalVotes
+        ? (proposal as any).getMinimumTotalVotes()
+        : (0 as number)
 
       const yesVotePct = calculatePct(proposal.getYesVoteCount(), maxVoteWeight)
       const yesVoteProgress = (yesVotePct / voteThresholdPct) * 100
 
       const isMultiProposal = proposal?.options?.length > 1
+
       const yesVoteCount = !isMultiProposal
-        ? fmtTokenAmount(
-            proposal.getYesVoteCount(),
-            proposalMint.account.decimals
-          )
-        : 0
-      const noVoteCount = !isMultiProposal
-        ? fmtTokenAmount(
-            proposal.getNoVoteCount(),
-            proposalMint.account.decimals
-          )
+        ? (proposal as any).isHeliumised
+          ? fmtTokenAmount(
+              proposal.getYesVoteCount(),
+              proposalMint.account.decimals
+            ) * (proposal as any).digitShiftCorrection
+          : fmtTokenAmount(
+              proposal.getYesVoteCount(),
+              proposalMint.account.decimals
+            )
         : 0
 
-      // const totalVoteCount = yesVoteCount + noVoteCount
+      const noVoteCount = !isMultiProposal
+        ? (proposal as any).isHeliumised
+          ? fmtTokenAmount(
+              proposal.getNoVoteCount(),
+              proposalMint.account.decimals
+            ) * (proposal as any).digitShiftCorrection
+          : fmtTokenAmount(
+              proposal.getNoVoteCount(),
+              proposalMint.account.decimals
+            )
+        : 0
+
+      const totalVoteCount = yesVoteCount + noVoteCount
 
       // const getRelativeVoteCount = (voteCount: number) =>
       //   totalVoteCount === 0 ? 0 : (voteCount / totalVoteCount) * 100
@@ -109,7 +129,9 @@ export default function useRealmProposalVotes(
         yesVoteCount,
         noVoteCount,
         minimumYesVotes,
+        minimumTotalVotes,
         yesVotesRequired,
+        totalVoteCount,
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO please fix, it can cause difficult bugs. You might wanna check out https://bobbyhadz.com/blog/react-hooks-exhaustive-deps for info. -@asktree

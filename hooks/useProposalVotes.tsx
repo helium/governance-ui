@@ -37,9 +37,11 @@ export default function useProposalVotes(proposal?: Proposal) {
       yesVoteCount: undefined,
       noVoteCount: undefined,
       minimumYesVotes: undefined,
+      minimumTotalVotes: undefined,
       yesVotesRequired: undefined,
       relativeNoVotes: undefined,
       relativeYesVotes: undefined,
+      totalVoteCount: undefined,
     }
 
   const isCommunityVote =
@@ -62,20 +64,34 @@ export default function useProposalVotes(proposal?: Proposal) {
 
   // note this can be WRONG if the proposal status is vetoed
   const maxVoteWeight = isPluginCommunityVoting
-    ? maxVoteRecord.account.maxVoterWeight
+    ? (proposal as any).isHeliumised
+      ? getProposalMaxVoteWeight(realm.account, proposal, proposalMint)
+      : maxVoteRecord.account.maxVoterWeight
     : getProposalMaxVoteWeight(realm.account, proposal, proposalMint)
 
-  const minimumYesVotes =
-    fmtTokenAmount(maxVoteWeight, proposalMint.decimals) *
-    (voteThresholdPct / 100)
+  const minimumYesVotes = (proposal as any).isHeliumised
+    ? fmtTokenAmount(maxVoteWeight, proposalMint.decimals)
+    : fmtTokenAmount(maxVoteWeight, proposalMint.decimals) *
+      (voteThresholdPct / 100)
+
+  const minimumTotalVotes = (proposal as any).getMinimumTotalVotes
+    ? (proposal as any).getMinimumTotalVotes()
+    : (0 as number)
 
   const yesVotePct = calculatePct(proposal.getYesVoteCount(), maxVoteWeight)
   const isMultiProposal = proposal?.options?.length > 1
   const yesVoteCount = !isMultiProposal
-    ? fmtTokenAmount(proposal.getYesVoteCount(), proposalMint.decimals)
+    ? (proposal as any).isHeliumised
+      ? fmtTokenAmount(proposal.getYesVoteCount(), proposalMint.decimals) *
+        (proposal as any).digitShiftCorrection
+      : fmtTokenAmount(proposal.getYesVoteCount(), proposalMint.decimals)
     : 0
+
   const noVoteCount = !isMultiProposal
-    ? fmtTokenAmount(proposal.getNoVoteCount(), proposalMint.decimals)
+    ? (proposal as any).isHeliumised
+      ? fmtTokenAmount(proposal.getNoVoteCount(), proposalMint.decimals) *
+        (proposal as any).digitShiftCorrection
+      : fmtTokenAmount(proposal.getNoVoteCount(), proposalMint.decimals)
     : 0
 
   const totalVoteCount = yesVoteCount + noVoteCount
@@ -105,7 +121,9 @@ export default function useProposalVotes(proposal?: Proposal) {
     relativeYesVotes,
     relativeNoVotes,
     minimumYesVotes,
+    minimumTotalVotes,
     yesVotesRequired,
+    totalVoteCount,
   }
 
   // @asktree: you may be asking yourself, "is this different from the more succinct way to write this?"

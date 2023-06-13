@@ -68,6 +68,8 @@ const ProposalCard = ({ proposalPk, proposal }: ProposalCardProps) => {
                   <ApprovalProgress
                     progress={votesData.yesVoteProgress}
                     votesRequired={votesData.yesVotesRequired}
+                    totalVotes={votesData.totalVoteCount}
+                    minTotalVotesRequired={votesData.minimumTotalVotes}
                   />
                 </div>
                 {votesData._programVersion !== undefined &&

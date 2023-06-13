@@ -67,6 +67,13 @@ const DelegateBalanceCard = () => {
     return null
   }
 
+  if (
+    (councilTorsDelegatedToUser && !councilTorsDelegatedToUser.length) ||
+    (communityTorsDelegatedToUser && !communityTorsDelegatedToUser.length)
+  ) {
+    return null
+  }
+
   return (
     <>
       <h3 className="mb-0 mt-2">Your Delegates</h3>
