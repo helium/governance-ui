@@ -6,7 +6,8 @@ import useHeliumVsrStore from 'HeliumVotePlugin/hooks/useHeliumVsrStore'
 export const ClaimAllRewardsBtn: React.FC<{
   className?: string
   onClick: () => void
-}> = ({ className = '', onClick }) => {
+  isLoading?: boolean
+}> = ({ className = '', onClick, isLoading = false }) => {
   const wallet = useWalletOnePointOh()
   const connected = !!wallet?.connected
   const [loading, positions] = useHeliumVsrStore((s) => [
@@ -30,6 +31,7 @@ export const ClaimAllRewardsBtn: React.FC<{
       tooltipMessage={tooltipContent}
       className={className}
       disabled={!connected || loading || !positionsWithRewards.length}
+      isLoading={isLoading}
       onClick={onClick}
     >
       <div className="flex items-center">

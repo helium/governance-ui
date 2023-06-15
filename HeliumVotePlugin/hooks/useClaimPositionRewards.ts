@@ -59,22 +59,27 @@ export const useClaimPositionRewards = () => {
         )
 
         const { lastClaimedEpoch } = delegatedPosAcc
-        let epoch = lastClaimedEpoch.add(new BN(1))
+        const epoch = lastClaimedEpoch.add(new BN(1))
+        const epochsToClaim = Array.from(
+          { length: currentEpoch.sub(epoch).toNumber() },
+          (_v, k) => epoch.addn(k)
+        )
 
-        while (epoch.lt(currentEpoch)) {
-          instructions.push(
-            await hsdProgram.methods
-              .claimRewardsV0({
-                epoch,
-              })
-              .accounts({
-                position: position.pubkey,
-                subDao: delegatedPosAcc.subDao,
-              })
-              .instruction()
-          )
-          epoch = epoch.add(new BN(1))
-        }
+        await Promise.all(
+          epochsToClaim.map(async (epoch) => {
+            instructions.push(
+              await hsdProgram.methods
+                .claimRewardsV0({
+                  epoch,
+                })
+                .accounts({
+                  position: position.pubkey,
+                  subDao: delegatedPosAcc.subDao,
+                })
+                .instruction()
+            )
+          })
+        )
 
         // This is an arbitrary threshold and we assume that up to 4 instructions can be inserted as a single Tx
         const ixsChunks = chunks(instructions, 4)
