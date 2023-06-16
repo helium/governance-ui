@@ -60,22 +60,28 @@ export const useClaimAllPositionsRewards = () => {
           )
 
           const { lastClaimedEpoch } = delegatedPosAcc
-          let epoch = lastClaimedEpoch.add(new BN(1))
+          const epoch = lastClaimedEpoch.add(new BN(1))
+          const epochsToClaim = Array.from(
+            { length: currentEpoch.sub(epoch).toNumber() },
+            (_v, k) => epoch.addn(k)
+          )
 
-          while (epoch.lt(currentEpoch)) {
-            multiDemArray[idx].push(
-              await hsdProgram.methods
-                .claimRewardsV0({
-                  epoch,
-                })
-                .accounts({
-                  position: position.pubkey,
-                  subDao: delegatedPosAcc.subDao,
-                })
-                .instruction()
-            )
-            epoch = epoch.add(new BN(1))
-          }
+          await Promise.all(
+            epochsToClaim.map(async (epoch) => {
+              console.log('help')
+              multiDemArray[idx].push(
+                await hsdProgram.methods
+                  .claimRewardsV0({
+                    epoch,
+                  })
+                  .accounts({
+                    position: position.pubkey,
+                    subDao: delegatedPosAcc.subDao,
+                  })
+                  .instruction()
+              )
+            })
+          )
         }
 
         const txsChunks: {

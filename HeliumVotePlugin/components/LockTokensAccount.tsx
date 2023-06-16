@@ -47,6 +47,7 @@ export const LockTokensAccount: React.FC<{
   const { error: createError, createPosition } = useCreatePosition()
   const {
     error: claimingRewardsError,
+    loading: claimingAllRewards,
     claimAllPositionsRewards,
   } = useClaimAllPositionsRewards()
   const [isLockModalOpen, setIsLockModalOpen] = useState(false)
@@ -365,7 +366,10 @@ export const LockTokensAccount: React.FC<{
             <div className="flex items-center justify-between mb-4">
               <h2 className="mb-4">Locked Positions</h2>
               {isSameWallet && canDelegate && (
-                <ClaimAllRewardsBtn onClick={handleClaimAllRewards} />
+                <ClaimAllRewardsBtn
+                  onClick={handleClaimAllRewards}
+                  isLoading={claimingAllRewards}
+                />
               )}
             </div>
             <div
