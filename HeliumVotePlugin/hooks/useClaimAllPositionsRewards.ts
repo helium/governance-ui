@@ -68,7 +68,6 @@ export const useClaimAllPositionsRewards = () => {
 
           await Promise.all(
             epochsToClaim.map(async (epoch) => {
-              console.log('help')
               multiDemArray[idx].push(
                 await hsdProgram.methods
                   .claimRewardsV0({
