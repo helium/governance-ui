@@ -66,20 +66,21 @@ export const useClaimAllPositionsRewards = () => {
             (_v, k) => epoch.addn(k)
           )
 
-          await Promise.all(
-            epochsToClaim.map(async (epoch) => {
-              multiDemArray[idx].push(
-                await hsdProgram.methods
-                  .claimRewardsV0({
-                    epoch,
-                  })
-                  .accounts({
-                    position: position.pubkey,
-                    subDao: delegatedPosAcc.subDao,
-                  })
-                  .instruction()
+          multiDemArray[idx].push(
+            ...(await Promise.all(
+              epochsToClaim.map(
+                async (epoch) =>
+                  await hsdProgram.methods
+                    .claimRewardsV0({
+                      epoch,
+                    })
+                    .accounts({
+                      position: position.pubkey,
+                      subDao: delegatedPosAcc.subDao,
+                    })
+                    .instruction()
               )
-            })
+            ))
           )
         }
 
