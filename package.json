@@ -3,6 +3,7 @@
   "author": "Solana Maintainers <maintainers@solana.foundation>",
   "license": "MIT",
   "version": "1.0.0",
+  "cacheDirectories": [".next/cache"],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
