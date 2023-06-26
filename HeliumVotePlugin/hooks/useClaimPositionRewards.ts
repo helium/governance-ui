@@ -52,7 +52,6 @@ export const useClaimPositionRewards = () => {
         throw new Error('Unable to Claim Rewards, Invalid params')
       } else {
         const currentEpoch = new BN(unixNow).div(new BN(EPOCH_LENGTH))
-        const instructions: TransactionInstruction[] = []
         const delegatedPosKey = delegatedPositionKey(position.pubkey)[0]
         const delegatedPosAcc = await hsdProgram.account.delegatedPositionV0.fetch(
           delegatedPosKey
@@ -65,9 +64,9 @@ export const useClaimPositionRewards = () => {
           (_v, k) => epoch.addn(k)
         )
 
-        await Promise.all(
-          epochsToClaim.map(async (epoch) => {
-            instructions.push(
+        const instructions: TransactionInstruction[] = await Promise.all(
+          epochsToClaim.map(
+            async (epoch) =>
               await hsdProgram.methods
                 .claimRewardsV0({
                   epoch,
@@ -77,8 +76,7 @@ export const useClaimPositionRewards = () => {
                   subDao: delegatedPosAcc.subDao,
                 })
                 .instruction()
-            )
-          })
+          )
         )
 
         // This is an arbitrary threshold and we assume that up to 4 instructions can be inserted as a single Tx
