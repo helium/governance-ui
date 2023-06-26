@@ -13,6 +13,7 @@ import {
   useAddressQuery_CouncilTokenOwner,
 } from './addresses/tokenOwnerRecord'
 import { useRealmQuery } from './realm'
+import queryClient from './queryClient'
 import { useMemo } from 'react'
 import useLegacyConnectionContext from '@hooks/useLegacyConnectionContext'
 import useWalletOnePointOh from '@hooks/useWalletOnePointOh'
@@ -52,12 +53,12 @@ export const useTokenOwnerRecordsForRealmQuery = () => {
         [filter]
       )
 
-      /*       results.forEach((x) => {
+      results.forEach((x) => {
         queryClient.setQueryData(
           tokenOwnerRecordQueryKeys.byPubkey(connection.cluster, x.pubkey),
           { found: true, result: x }
         )
-      }) */
+      })
 
       return results
     },
@@ -101,8 +102,7 @@ export const useTokenRecordsByOwnersMap = () => {
               .filter((x) => x.account.governingTokenMint.equals(councilMint))
               .map((x) => [x.account.governingTokenOwner.toString(), x])
           ) as Record<string, typeof tors[number]>),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [councilMint]
+    [councilMint, tors]
   )
 
   const communityMint = realm?.account.communityMint
@@ -115,8 +115,7 @@ export const useTokenRecordsByOwnersMap = () => {
               .filter((x) => x.account.governingTokenMint.equals(communityMint))
               .map((x) => [x.account.governingTokenOwner.toString(), x])
           ) as Record<string, typeof tors[number]>),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [communityMint]
+    [communityMint, tors]
   )
 
   // I think this is needed to prevent rerender spam
