@@ -2,6 +2,7 @@ import { Keypair, Transaction, TransactionInstruction } from '@solana/web3.js'
 import {
   ChatMessageBody,
   getGovernanceProgramVersion,
+  getTokenOwnerRecordAddress,
   GOVERNANCE_CHAT_PROGRAM_ID,
   Proposal,
   Realm,
@@ -65,6 +66,16 @@ export async function castVote(
     connection,
     programId
   )
+  const tokenOwnerRecordPk =
+    votingPlugin &&
+    votingPlugin.client &&
+    wallet.publicKey &&
+    (await getTokenOwnerRecordAddress(
+      realm.owner,
+      realm.pubkey,
+      proposal.account.governingTokenMint,
+      wallet.publicKey!
+    ))
 
   //will run only if any plugin is connected with realm
   const plugin = await votingPlugin?.withCastPluginVote(
@@ -117,7 +128,7 @@ export async function castVote(
     proposal.account.governance,
     proposal.pubkey,
     proposal.account.tokenOwnerRecord,
-    tokenOwnerRecord.pubkey,
+    tokenOwnerRecordPk!,
     governanceAuthority,
     tokenMint,
     vote,

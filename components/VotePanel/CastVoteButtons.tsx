@@ -31,19 +31,16 @@ const useCanVote = () => {
   const isVoteCast = !!ownVoteRecord?.found
 
   const hasMinAmountToVote =
-    voterTokenRecord &&
-    ownVoterWeight.hasMinAmountToVote(
-      voterTokenRecord.account.governingTokenMint
-    )
+    client.clientType === VotingClientType.HeliumVsrClient ||
+    (voterTokenRecord &&
+      ownVoterWeight.hasMinAmountToVote(
+        voterTokenRecord.account.governingTokenMint
+      ))
 
   const canVote =
     connected &&
     !(
       client.clientType === VotingClientType.NftVoterClient && !voterTokenRecord
-    ) &&
-    !(
-      client.clientType === VotingClientType.HeliumVsrClient &&
-      !voterTokenRecord
     ) &&
     !isVoteCast &&
     hasMinAmountToVote

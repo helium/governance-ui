@@ -50,7 +50,6 @@ export const useProposalByPubkeyQuery = (pubkey: PublicKey | undefined) => {
         ) &&
         communityMint
       ) {
-        console.log('DOING')
         return {
           ...result,
           result: await heliumiseProposal({

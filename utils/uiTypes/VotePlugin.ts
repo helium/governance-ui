@@ -9,6 +9,9 @@ import {
   SYSTEM_PROGRAM_ID,
   Proposal,
   TokenOwnerRecord,
+  getTokenOwnerRecordAddress,
+  withCreateTokenOwnerRecord,
+  getGovernanceProgramVersion,
 } from '@solana/spl-governance'
 import { PublicKey, TransactionInstruction } from '@solana/web3.js'
 import { chunks } from '@utils/helpers'
@@ -445,6 +448,24 @@ export class VotingClient {
         )
       }
 
+      let tokenOwnerRecordPk = tokenOwnerRecord?.pubkey
+      if (!tokenOwnerRecord) {
+        const programVersion = await getGovernanceProgramVersion(
+          this.client.program.provider.connection,
+          this.client.program.programId
+        )
+
+        tokenOwnerRecordPk = await withCreateTokenOwnerRecord(
+          instructions,
+          realm.owner,
+          programVersion,
+          realm.pubkey,
+          walletPk,
+          realm.account.communityMint,
+          walletPk
+        )
+      }
+
       //1 nft is 3 accounts
       const positionChunks = chunks(remainingAccounts, 9)
       for (const chunk of positionChunks) {
@@ -456,7 +477,7 @@ export class VotingClient {
             })
             .accounts({
               registrar,
-              voterTokenOwnerRecord: tokenOwnerRecord.pubkey,
+              voterTokenOwnerRecord: tokenOwnerRecordPk,
             })
             .remainingAccounts(chunk)
             .instruction()
