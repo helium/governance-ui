@@ -16,6 +16,7 @@ import useWalletOnePointOh from '@hooks/useWalletOnePointOh'
 import { useProposalVoteRecordQuery } from '@hooks/queries/voteRecord'
 import { useSubmitVote } from '@hooks/useSubmitVote'
 import { useSelectedRealmInfo } from '@hooks/selectedRealm/useSelectedRealmRegistryEntry'
+import useHeliumVsrStore from 'HeliumVotePlugin/hooks/useHeliumVsrStore'
 
 const useCanVote = () => {
   const client = useVotePluginsClientStore(
@@ -27,11 +28,14 @@ const useCanVote = () => {
 
   const { data: ownVoteRecord } = useProposalVoteRecordQuery('electoral')
   const voterTokenRecord = useVoterTokenRecord()
+  const votingPower = useHeliumVsrStore((s) => s.state.votingPower)
 
   const isVoteCast = !!ownVoteRecord?.found
 
   const hasMinAmountToVote =
-    client.clientType === VotingClientType.HeliumVsrClient ||
+    (client.clientType === VotingClientType.HeliumVsrClient &&
+      votingPower &&
+      !votingPower.isZero()) ||
     (voterTokenRecord &&
       ownVoterWeight.hasMinAmountToVote(
         voterTokenRecord.account.governingTokenMint
