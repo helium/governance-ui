@@ -69,7 +69,7 @@ const RealmBox = React.forwardRef<HTMLDivElement, IRealmBox>(
 
 function RealmsGrid({
   certifiedRealms,
-  unchartedRealms,
+  unchartedRealms: _,
   filteredRealms,
   editing,
   searching,
@@ -290,26 +290,6 @@ function RealmsGrid({
                   )
               )}
           </div>
-          {/*           <h2 className="pt-12 mb-4">Uncharted DAOs</h2>
-          <div className="grid grid-flow-row grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {unchartedRealms &&
-              unchartedRealms.map(
-                (realm) =>
-                  !gridRealms?.find(
-                    (r) => r.realmId.toString() == realm.realmId.toString()
-                  ) && (
-                    <div key={realm?.realmId.toString()}>
-                      <RealmBox
-                        realm={realm}
-                        onClick={() => (editing ? null : goToRealm(realm))}
-                        editing={editing}
-                        removeItem={() => null}
-                        theme={theme}
-                      />
-                    </div>
-                  )
-              )}
-          </div> */}
         </div>
       )}
     </>
