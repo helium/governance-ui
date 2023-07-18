@@ -271,7 +271,7 @@ function RealmsGrid({
       )}
       {!searching && !editing && (
         <div>
-          <div className="grid grid-flow-row grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-flow-row grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-5">
             {certifiedRealms &&
               certifiedRealms.map(
                 (realm) =>
@@ -290,7 +290,7 @@ function RealmsGrid({
                   )
               )}
           </div>
-          <h2 className="pt-12 mb-4">Uncharted DAOs</h2>
+          {/*           <h2 className="pt-12 mb-4">Uncharted DAOs</h2>
           <div className="grid grid-flow-row grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
             {unchartedRealms &&
               unchartedRealms.map(
@@ -309,7 +309,7 @@ function RealmsGrid({
                     </div>
                   )
               )}
-          </div>
+          </div> */}
         </div>
       )}
     </>

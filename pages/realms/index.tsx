@@ -6,15 +6,11 @@ import {
   RealmInfo,
 } from '../../models/registry/api'
 
-import { SearchIcon } from '@heroicons/react/outline'
 import useQueryContext from '@hooks/useQueryContext'
-import Button from '@components/Button'
 import { notify } from '@utils/notifications'
 import { useRouter } from 'next/router'
-import Input from '@components/inputs/Input'
 import dynamic from 'next/dynamic'
 
-import { BsLayoutWtf, BsCheck } from 'react-icons/bs'
 import useWalletOnePointOh from '@hooks/useWalletOnePointOh'
 import { PublicKey } from '@solana/web3.js'
 import { DEFAULT_GOVERNANCE_PROGRAM_ID } from '@components/instructions/tools'
@@ -116,7 +112,7 @@ const Realms = () => {
       <div className="flex flex-wrap items-center justify-between w-full mb-6">
         <h1 className="mb-4 sm:mb-0">DAOs</h1>
         <div className="flex space-x-4 items-center">
-          <div className="w-10 h-10">
+          {/*           <div className="w-10 h-10">
             <button
               className="bg-bkg-2 default-transition flex items-center justify-center h-10 rounded-full w-10 hover:bg-bkg-3"
               onClick={() => setEditingGrid(!editingGrid)}
@@ -127,8 +123,8 @@ const Realms = () => {
                 <BsLayoutWtf className="h-4 text-fgd-1 w-4" />
               )}
             </button>
-          </div>
-          <Input
+          </div> */}
+          {/*           <Input
             className="pl-8"
             value={searchString}
             type="text"
@@ -143,7 +139,7 @@ const Realms = () => {
             >
               Create DAO
             </Button>
-          )}
+          )} */}
         </div>
       </div>
       <RealmsDashboard
