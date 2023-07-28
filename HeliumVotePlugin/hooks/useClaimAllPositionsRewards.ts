@@ -124,8 +124,11 @@ export const useClaimAllPositionsRewards = () => {
             message: 'Claiming Rewards successful',
             type: 'success',
           })
-        } catch (err) {
-          notify({ type: 'error', message: `${err}` })
+        } catch (_) {
+          notify({
+            type: 'error',
+            message: 'Claiming Rewards unsuccessful, please try again',
+          })
         }
       }
     }
