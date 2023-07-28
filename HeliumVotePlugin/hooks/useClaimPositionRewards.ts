@@ -91,17 +91,18 @@ export const useClaimPositionRewards = () => {
         }))
 
         notify({ message: 'Claiming Rewards' })
-        await sendTransactionsV3({
-          transactionInstructions: txsChunks,
-          wallet,
-          connection: connection.current,
-          callbacks: {
-            afterAllTxConfirmed: () =>
-              notify({
-                message: 'Claiming Rewards successful',
-                type: 'success',
-              }),
-          },
+
+        for (const chunk of chunks(txsChunks, 5)) {
+          await sendTransactionsV3({
+            transactionInstructions: chunk,
+            wallet,
+            connection: connection.current,
+          })
+        }
+
+        notify({
+          message: 'Claiming Rewards successful',
+          type: 'success',
         })
       }
     }
