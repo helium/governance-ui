@@ -112,7 +112,7 @@ export const useClaimAllPositionsRewards = () => {
         notify({ message: 'Claiming Rewards' })
 
         try {
-          for (const chunk of chunks(txsChunks, 5)) {
+          for (const chunk of chunks(txsChunks, 2)) {
             await sendTransactionsV3({
               transactionInstructions: chunk,
               wallet,
