@@ -34,6 +34,7 @@ export const useClosePosition = () => {
     }) => {
       const lockup = position.lockup
       const lockupKind = Object.keys(lockup.kind)[0]
+      const hasActiveVotes = position.numActiveVotes > 0
       const isInvalid =
         !connection ||
         !connection.current ||
@@ -42,7 +43,7 @@ export const useClosePosition = () => {
         !client ||
         !(client instanceof HeliumVsrClient) ||
         !wallet ||
-        position.numActiveVotes > 0 ||
+        hasActiveVotes ||
         // lockupExpired
         !(
           lockupKind !== 'constant' &&
@@ -52,6 +53,10 @@ export const useClosePosition = () => {
       if (loading) return
 
       if (isInvalid) {
+        if (hasActiveVotes)
+          throw new Error(
+            'Unable to Close Position, Position is partaking in an active vote!'
+          )
         throw new Error('Unable to Close Position, Invalid params')
       } else {
         const instructions: TransactionInstruction[] = []

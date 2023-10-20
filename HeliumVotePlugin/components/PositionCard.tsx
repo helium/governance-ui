@@ -425,6 +425,12 @@ export const PositionCard: React.FC<PositionCardProps> = ({
                   }x (${getTimeLeftFromNowFmt(position.genesisEnd)})`}
                 />
               )}
+              {hasActiveVotes && (
+                <CardLabel
+                  label="Active Votes"
+                  value={position.numActiveVotes}
+                />
+              )}
             </div>
             {isOwner && (
               <div style={{ marginTop: 'auto' }}>
