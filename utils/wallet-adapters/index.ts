@@ -97,7 +97,6 @@ const WALLET_CONNECT = {
 }
 
 export const WALLET_PROVIDERS = [
-  MOBILE_WALLET_PROVIDER,
   PHANTOM_PROVIDER,
   BACKPACK_PROVIDER,
   TORUS_PROVIDER,
@@ -106,12 +105,10 @@ export const WALLET_PROVIDERS = [
   SOLLET_PROVIDER,
   EXODUS_PROVIDER,
   WALLET_CONNECT,
+  MOBILE_WALLET_PROVIDER,
 ]
 
-export const DEFAULT_PROVIDER =
-  MOBILE_WALLET_PROVIDER.adapter.readyState !== WalletReadyState.Unsupported
-    ? MOBILE_WALLET_PROVIDER
-    : PHANTOM_PROVIDER
+export const DEFAULT_PROVIDER = PHANTOM_PROVIDER
 
 export const getWalletProviderByName = (
   nameOrNull: string | null | undefined,
